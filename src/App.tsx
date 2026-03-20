@@ -1,10 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-import
-<ProtectedRoute>
-<DashboardPage /></ProtectedRoute>om './pages/LandingPage';
+import LandingPage from './pages/LandingPage';
 import Connexion from './pages/auth/Connexion';
-import Inscription from './pages/auth/inscription';
+import Inscription from './pages/auth/Inscription';
 import MdpOublie from './pages/auth/MdpOublie';
 import DashboardPage from './pages/dashboard/DashboardPage';
 
