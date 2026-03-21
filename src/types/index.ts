@@ -8,7 +8,7 @@ export interface User{
 }
 
 //Statut de commandes
-export type StatutCommande = 'en_attente' | 'en_traitement...' | 'prete' | 'livree' | 'annulee';
+export type StatutCommande = 'en_attente' | 'en_traitement' | 'prete' | 'livree' | 'annulee';
 
 //Type de commande
 export interface commande{
