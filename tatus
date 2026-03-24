@@ -1,0 +1,128 @@
+[33mcommit 90fc00ae307780b26deb3bc9fb56cb1bb7f3c5ba[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/navbar[m[33m)[m
+Author: hervinho00-create <hervinho00@gmail.com>
+Date:   Sun Mar 22 01:22:25 2026 +0000
+
+     mise en place de la navbar
+
+[33mcommit 9873ddce2763cac3e8948adac5ad62702765a3ea[m
+Author: hervinho00-create <hervinho00@gmail.com>
+Date:   Sun Mar 22 01:12:58 2026 +0000
+
+     ajout du composant CartModal.tsx
+
+[33mcommit 78abc266fc59483ffaa0fd7e2a68322d535f0c34[m
+Author: hervinho00-create <hervinho00@gmail.com>
+Date:   Sun Mar 22 00:24:19 2026 +0000
+
+     ajout du composant boutton 
+
+[33mcommit 124b305492af82469aa4032e0472eb6ea4d4762a[m[33m ([m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m
+Merge: 2d780c9 bdb788b
+Author: thxxmlk30 <thxxmlk30@gmail.com>
+Date:   Sat Mar 21 02:02:06 2026 +0000
+
+    Merge branch 'feature/landing' into develop
+
+[33mcommit bdb788b67f2bc752d6551e7f8e03c4e612327ff4[m[33m ([m[1;31morigin/feature/landing[m[33m)[m
+Author: Medoune Ngalane <ngalanemedoune7@gmail.com>
+Date:   Sat Mar 21 01:57:13 2026 +0000
+
+    feature: mise en place de  la section about
+
+[33mcommit cc63f83c885b2820fe4608b16930154fa49911f3[m
+Author: Medoune Ngalane <ngalanemedoune7@gmail.com>
+Date:   Sat Mar 21 01:55:15 2026 +0000
+
+    feature: ajout de la section testimonials
+
+[33mcommit 2d780c90430718ad5827ebbfbb5e67f8aa283bdc[m
+Author: thxxmlk30 <thxxmlk30@gmail.com>
+Date:   Sat Mar 21 01:40:25 2026 +0000
+
+    Correction de connexion.tsx
+
+[33mcommit 9537c95b9d68c36e7bae60ce9f1af1bedcaa22be[m
+Merge: e7ae3e3 3d7c8c6
+Author: thxxmlk30 <thxxmlk30@gmail.com>
+Date:   Sat Mar 21 01:37:48 2026 +0000
+
+    Merge branch 'feature/auth' into develop
+
+[33mcommit 3d7c8c67918004c70ef15ac44d46a716af6707a7[m[33m ([m[1;31morigin/feature/auth[m[33m)[m
+Author: Mouhamadou Lamine DABO <Mouhamadoulaminedabo21@gmail.com>
+Date:   Sat Mar 21 01:26:05 2026 +0000
+
+    feature : page mot de passe oublié
+
+[33mcommit fb067ae58895a7563cde9c2d859620514fbcb079[m
+Author: Mouhamadou Lamine DABO <Mouhamadoulaminedabo21@gmail.com>
+Date:   Sat Mar 21 01:20:53 2026 +0000
+
+    feature : page de connexion
+
+[33mcommit e7ae3e38712f99753bbc08afada4a1ac6334885b[m
+Merge: 72b945f 8ba4ec5
+Author: thxxmlk30 <thxxmlk30@gmail.com>
+Date:   Sat Mar 21 01:05:41 2026 +0000
+
+    Merge branch 'feature/landing' into develop
+
+[33mcommit 8ba4ec5ba19d0bfda2efd0b639e32bcc22327c0d[m
+Author: Medoune Ngalane <ngalanemedoune7@gmail.com>
+Date:   Sat Mar 21 01:02:02 2026 +0000
+
+    Mise en place du héros
+
+[33mcommit 47d21a1e9de7d865d1d0e2a50710ba6a2296d5e4[m
+Author: Medoune Ngalane <ngalanemedoune7@gmail.com>
+Date:   Sat Mar 21 01:00:02 2026 +0000
+
+    Mise en place de la NavBar
+
+[33mcommit 57ca81ee62a7b0d32e0b516d7707626cf79a74c3[m
+Author: Medoune Ngalane <ngalanemedoune7@gmail.com>
+Date:   Sat Mar 21 00:57:37 2026 +0000
+
+    Mise en place de la LandingPage
+
+[33mcommit 72b945f623f9412efb4be27f5ef99b775f8bfbe6[m
+Author: thxxmlk30 <thxxmlk30@gmail.com>
+Date:   Sat Mar 21 00:19:35 2026 +0000
+
+    Ajout du composant badge
+
+[33mcommit de2f28a9468dbfcca3032efdbb05b66c109bf26d[m[33m ([m[1;31morigin/feature/dashboard[m[33m)[m
+Author: thxxmlk30 <thxxmlk30@gmail.com>
+Date:   Fri Mar 20 13:37:57 2026 +0000
+
+    Creation d'un composant Button
+
+[33mcommit 0a0d1695b38de9332db938186f0548a6c7b14a73[m
+Author: thxxmlk30 <thxxmlk30@gmail.com>
+Date:   Fri Mar 20 13:31:39 2026 +0000
+
+    Mise en place de react-router-dom et des routes
+
+[33mcommit 4b198ec525315b8a7dca257a6154114c99b811b1[m
+Author: thxxmlk30 <thxxmlk30@gmail.com>
+Date:   Fri Mar 20 13:29:43 2026 +0000
+
+    Mise en place de react-router-dom et des routes
+
+[33mcommit bc6f16071b5a13cf1ab655166bf60209565303de[m
+Author: thxxmlk30 <thxxmlk30@gmail.com>
+Date:   Fri Mar 20 13:00:50 2026 +0000
+
+    Definition des types typescript
+
+[33mcommit 637554249be83715be6fe8ed8e4bc90226641b30[m
+Author: thxxmlk30 <thxxmlk30@gmail.com>
+Date:   Thu Mar 19 02:09:03 2026 +0000
+
+    Mise en place de la structure du projet
+
+[33mcommit 6370f6873abadbde8309fc0d532cb5c87920819e[m
+Author: thxxmlk30 <thxxmlk30@gmail.com>
+Date:   Thu Mar 19 00:31:56 2026 +0000
+
+    initialisation du projet
