@@ -1,9 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
-import Connexion from './pages/auth/Connexion';
-import Inscription from './pages/auth/Inscription';
-import MdpOublie from './pages/auth/MdpOublie';
+import Connexion from './pages/auth/loginPage';
+import Inscription from './pages/auth/RegisterPage';
+import MdpOublie from './pages/auth/ForotPasswordPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 
 // Composant qui protège les routes privées
@@ -28,5 +28,3 @@ export default function App() {
     </Routes>
   )
 }
-
-export default App

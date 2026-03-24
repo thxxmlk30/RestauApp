@@ -1,50 +1,52 @@
-//Type utilisateur
-
-export interface User{
-    id: string;
-    nom : string;
-    email : string;
-    role : 'admin' | 'client' | 'chef';
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'waiter' | 'chef' | 'customer';
 }
 
-//Statut de commandes
-export type StatutCommande = 'en_attente' | 'en_traitement' | 'prete' | 'livree' | 'annulee';
+export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
 
-//Type de commande
-export interface commande{
-    id : string;
-    numeroTable : number;
-    articles : orderItem[];
-    statut : statutCom[];
-    montant : number;
-    Heure : string;
-    nomClient? : string;
+export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'any';
+
+export interface Order {
+  id: string;
+  tableNumber: number;
+  items: OrderItem[];
+  status: OrderStatus;
+  totalAmount: number;
+  createdAt: string;
+  customerName?: string;
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
+  rating?: number;
+  review?: string;
+  ratedAt?: string;
 }
 
-// article dans une commande
-export interface orderItem{
-    menuItemId : string;
-    nom : string;
-    quantite : number;
-    prix : number;
+export interface OrderItem {
+  menuItemId: string;
+  name: string;
+  quantity: number;
+  price: number;
 }
 
-// Type d'un plat du menu
 export interface MenuItem {
   id: string;
-  nom: string;
+  name: string;
   description: string;
-  prix: number;
+  price: number;
   category: 'entree' | 'plat' | 'dessert' | 'boisson';
+  meal: Meal;
   image: string;
-  disponible: boolean;
+  available: boolean;
 }
 
-// Statistiques dashboard
 export interface DashboardStats {
-  commandesJour: number;
-  revenuejour: number;
-  tablesOccupes: number;
+  todayOrders: number;
+  todayRevenue: number;
+  occupiedTables: number;
   totalTables: number;
-  commandesAttente: number;
+  pendingOrders: number;
 }
