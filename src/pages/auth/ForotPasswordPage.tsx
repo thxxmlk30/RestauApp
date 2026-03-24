@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-500 rounded-2xl mb-4">
                         <ChefHat size={32} className="text-white" />
                     </div>
-                    <h1 className="font-display text-3xl font-bold text-white">THE Mbaxxal</h1>
+                    <h1 className="font-display text-3xl font-bold text-white">Linguere</h1>
                 </div>
                 <div className="bg-white rounded-3xl p-8 shadow-2xl">
                     {!submitted ? (

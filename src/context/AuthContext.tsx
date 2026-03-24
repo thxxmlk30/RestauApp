@@ -16,11 +16,11 @@ export function AuthProvider({ children } : {children:ReactNode}){
     const [user,setUser] = useState<User | null>(null);
     
     const login = (email:string,password:string):boolean => {
-        if(email === 'admin@restaurant.com' && password === 'Resataurant1234'){
+        if(email === 'admin@linguere.sn' && password === 'Linguere1234'){
             setUser({
                 id : '1',
                 name: 'Chef Admin',
-                email : 'admin@restaurant.com',
+                email : 'admin@linguere.sn',
                 role : 'admin'
             })
             return true;
@@ -41,7 +41,7 @@ export function AuthProvider({ children } : {children:ReactNode}){
         }
 
         // Check if email already exists (demo: just check against the hardcoded admin)
-        if (data.email === 'admin@restaurant.com') {
+        if (data.email === 'admin@linguere.sn') {
             return { ok: false, error: 'Cet email est déjà utilisé' };
         }
 

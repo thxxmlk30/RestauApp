@@ -56,20 +56,20 @@ export default function LoginPage() {
             <div className="w-full max-w-5xl">
                 <div className="grid md:grid-cols-2 overflow-hidden rounded-3xl shadow-2xl bg-white">
                     <div className="relative min-h-44 md:min-h-[560px]">
-                        <img src={authImage} alt="THE Mbaxxal" className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={authImage} alt="Linguere" className="absolute inset-0 h-full w-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-br from-secondary-900/85 via-secondary-900/35 to-transparent" />
                         <div className="relative h-full p-8 md:p-10 flex flex-col justify-between">
                             <div className="inline-flex items-center gap-2 text-white/90">
                                 <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center">
                                     <ChefHat size={20} className="text-white" />
                                 </div>
-                                <span className="font-display text-2xl font-bold">THE Mbaxxal</span>
+                                <span className="font-display text-2xl font-bold">Linguere</span>
                             </div>
                             <div className="max-w-sm">
                                 <p className="text-white/90 text-sm font-medium">Espace de gestion</p>
                                 <h2 className="text-white font-display text-4xl font-bold mt-2">Commandes & menu</h2>
                                 <p className="text-white/80 mt-3 text-sm leading-relaxed">
-                                    Connecte-toi pour gérer les commandes en temps réel et mettre à jour le menu.
+                                    Connecte-toi pour suivre les commandes en temps réel et gérer le menu du restaurant Linguere.
                                 </p>
                             </div>
                         </div>
@@ -77,7 +77,7 @@ export default function LoginPage() {
 
                     <div className="p-8 md:p-10">
                         <h1 className="text-2xl font-bold text-secondary-900">Connexion</h1>
-                        <p className="text-gray-500 text-sm mt-1">Bienvenue sur THE Mbaxxal.</p>
+                        <p className="text-gray-500 text-sm mt-1">Bienvenue sur Linguere.</p>
 
                         {error && (
                             <div className="mt-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
@@ -90,7 +90,7 @@ export default function LoginPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Adresse email</label>
                                 <input
                                     type="email"
-                                    placeholder="admin@thembaxxal.sn"
+                                    placeholder="admin@linguere.sn"
                                     className={`w-full px-4 py-3 rounded-xl border ${errors.email ? 'border-red-400' : 'border-gray-200'} focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition`}
                                     {...register('email', {
                                         required: "L'email est requis",
@@ -144,7 +144,9 @@ export default function LoginPage() {
 
                         <div className="mt-4 p-3 bg-gray-50 rounded-xl text-xs text-gray-500">
                             <p className="font-semibold text-gray-600">Démo</p>
-                            <p className="mt-1">Admin : <span className="font-mono">admin@restaurant.com</span> / <span className="font-mono">Resataurant1234</span></p>
+                            <p className="mt-1">
+                                Admin : <span className="font-mono">admin@linguere.sn</span> / <span className="font-mono">Linguere1234</span>
+                            </p>
                         </div>
                     </div>
                 </div>

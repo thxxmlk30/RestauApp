@@ -67,7 +67,7 @@ export default function DashboardPage() {
             <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
               <ChefHat size={16} className="text-white" />
             </div>
-            <span className="font-display font-bold text-secondary-900">THE Mbaxxal</span>
+            <span className="font-display font-bold text-secondary-900">Linguere</span>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600 hidden sm:block">Bonjour, <strong>{user?.name}</strong></span>
