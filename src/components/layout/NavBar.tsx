@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Menu, X, ShoppingCart } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 
 export function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +11,7 @@ export function NavBar() {
   const isAuthenticated = auth?.isAuthenticated ?? false;
   const user = auth?.user;
   const logout = auth?.logout ?? (() => {});
+  const { itemCount, openCart } = useCart();
 
   return (
     <nav className="bg-white shadow-md fixed w-full top-0 z-50">
@@ -21,20 +23,26 @@ export function NavBar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#menu" className="text-gray-700 hover:text-orange-600 transition-colors">
+            <Link to="/#menu" className="text-gray-700 hover:text-orange-600 transition-colors">
               Menu
-            </a>
-            <a href="#about" className="text-gray-700 hover:text-orange-600 transition-colors">
+            </Link>
+            <Link to="/#about" className="text-gray-700 hover:text-orange-600 transition-colors">
               À propos
-            </a>
+            </Link>
 
             <Button
               type="button"
               variant="outline"
               size="sm"
+              onClick={openCart}
             >
               <ShoppingCart size={16} className="mr-2" />
               Panier
+              {itemCount > 0 && (
+                <span className="ml-2 inline-flex min-w-6 justify-center rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-white">
+                  {itemCount}
+                </span>
+              )}
             </Button>
 
             {isAuthenticated ? (
@@ -77,29 +85,38 @@ export function NavBar() {
         {isOpen && (
           <div className="md:hidden pb-4">
             <div className="flex flex-col space-y-3">
-              <a
-                href="#menu"
+              <Link
+                to="/#menu"
                 className="text-gray-700 hover:text-orange-600 transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 Menu
-              </a>
-              <a
-                href="#about"
+              </Link>
+              <Link
+                to="/#about"
                 className="text-gray-700 hover:text-orange-600 transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 À propos
-              </a>
+              </Link>
 
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 className="w-full"
+                onClick={() => {
+                  openCart();
+                  setIsOpen(false);
+                }}
               >
                 <ShoppingCart size={16} className="mr-2" />
                 Panier
+                {itemCount > 0 && (
+                  <span className="ml-2 inline-flex min-w-6 justify-center rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-white">
+                    {itemCount}
+                  </span>
+                )}
               </Button>
 
               {isAuthenticated ? (

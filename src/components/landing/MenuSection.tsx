@@ -88,6 +88,18 @@ export default function MenuSection() {
             const quantity = cart[item.id] ?? 0;
             return (
               <article key={item.id} className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="h-32 w-full overflow-hidden rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 mb-4">
+                  {item.image && (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                </div>
+
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="font-semibold text-secondary-900 truncate">{item.name}</h3>

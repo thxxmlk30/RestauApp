@@ -1,30 +1,67 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import type { User } from './types';
 import LandingPage from './pages/LandingPage';
-import Connexion from './pages/auth/loginPage';
-import Inscription from './pages/auth/RegisterPage';
-import MdpOublie from './pages/auth/ForotPasswordPage';
+import LoginPage from './pages/auth/loginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForotPasswordPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import MyOrdersPage from './pages/orders/MyOrdersPage';
+import CartModal from './components/ordering/Cartmodal';
 
 // Composant qui protège les routes privées
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: User['role'][] }) {
+  const { isAuthenticated, user } = useAuth();
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    const redirect = encodeURIComponent(`${location.pathname}${location.search}`);
+    return <Navigate to={`/login?redirect=${redirect}`} replace />;
+  }
+
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 export default function App() {
 
   return (
-    <Routes>
-      <Route path='/' element={<LandingPage />} />
-      <Route path='/connexion' element={<Connexion />} />
-      <Route path='/inscription' element={<Inscription />} />
-      <Route path='/mdp-oublie' element={<MdpOublie />} />
-      <Route path='/dashboard' element={
-        <ProtectedRoute>
-          <DashboardPage />
-        </ProtectedRoute>
-      } />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/mes-commandes"
+          element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <MyOrdersPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/connexion" element={<Navigate to="/login" replace />} />
+        <Route path="/inscription" element={<Navigate to="/register" replace />} />
+        <Route path="/mdp-oublie" element={<Navigate to="/forgot-password" replace />} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      <CartModal />
+    </>
   )
 }
