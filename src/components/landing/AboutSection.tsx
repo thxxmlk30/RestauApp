@@ -1,4 +1,5 @@
 import { Clock, MapPin, Phone, Mail } from 'lucide-react';
+import aboutBgImage from '../../assets/image restau.webp';
 
 const schedule = [
   { day: 'Lundi – Vendredi', hours: '12h00 – 15h00 · 19h00 – 23h00' },
@@ -38,8 +39,17 @@ export default function AboutSection() {
             </div>
           </div>
 
-          <div className="bg-secondary-700 rounded-3xl p-8">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="relative overflow-hidden bg-secondary-700 rounded-3xl p-8">
+            <img
+              src={aboutBgImage}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-10"
+              loading="lazy"
+              decoding="async"
+            />
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center">
                 <Clock size={18} className="text-white" />
               </div>
@@ -58,6 +68,7 @@ export default function AboutSection() {
               <p className="text-primary-400 text-sm text-center">
                 Réservation recommandée · Appeler ou envoyer un email
               </p>
+            </div>
             </div>
           </div>
         </div>

@@ -1,9 +1,4 @@
 import type { MenuItem } from '../types';
-import bissapImage from '../assets/Bissap.webp';
-import restaurantImage from '../assets/image restau.webp';
-import mbaxalImage from '../assets/mbaxal.webp';
-import repasImage from '../assets/Repas5etoiles.webp';
-import thiebImage from '../assets/thieb.webp';
 
 export const menuItems: MenuItem[] = [
   // Petit-déjeuner
@@ -14,7 +9,7 @@ export const menuItems: MenuItem[] = [
     price: 500,
     category: 'boisson',
     meal: 'breakfast',
-    image: restaurantImage,
+    image: '',
     available: true,
   },
   {
@@ -24,7 +19,7 @@ export const menuItems: MenuItem[] = [
     price: 700,
     category: 'boisson',
     meal: 'breakfast',
-    image: mbaxalImage,
+    image: '',
     available: true,
   },
   {
@@ -34,7 +29,7 @@ export const menuItems: MenuItem[] = [
     price: 800,
     category: 'dessert',
     meal: 'breakfast',
-    image: repasImage,
+    image: '',
     available: true,
   },
   {
@@ -44,7 +39,7 @@ export const menuItems: MenuItem[] = [
     price: 2000,
     category: 'plat',
     meal: 'breakfast',
-    image: restaurantImage,
+    image: '',
     available: true,
   },
   {
@@ -54,7 +49,7 @@ export const menuItems: MenuItem[] = [
     price: 1200,
     category: 'dessert',
     meal: 'breakfast',
-    image: repasImage,
+    image: '',
     available: true,
   },
 
@@ -66,7 +61,7 @@ export const menuItems: MenuItem[] = [
     price: 4500,
     category: 'plat',
     meal: 'lunch',
-    image: thiebImage,
+    image: '',
     available: true,
   },
   {
@@ -76,7 +71,7 @@ export const menuItems: MenuItem[] = [
     price: 4000,
     category: 'plat',
     meal: 'lunch',
-    image: repasImage,
+    image: '',
     available: true,
   },
   {
@@ -86,7 +81,7 @@ export const menuItems: MenuItem[] = [
     price: 4500,
     category: 'plat',
     meal: 'lunch',
-    image: mbaxalImage,
+    image: '',
     available: true,
   },
   {
@@ -96,7 +91,7 @@ export const menuItems: MenuItem[] = [
     price: 1500,
     category: 'entree',
     meal: 'lunch',
-    image: restaurantImage,
+    image: '',
     available: true,
   },
   {
@@ -106,7 +101,7 @@ export const menuItems: MenuItem[] = [
     price: 2000,
     category: 'entree',
     meal: 'lunch',
-    image: repasImage,
+    image: '',
     available: true,
   },
   {
@@ -116,7 +111,7 @@ export const menuItems: MenuItem[] = [
     price: 1500,
     category: 'dessert',
     meal: 'lunch',
-    image: mbaxalImage,
+    image: '',
     available: true,
   },
 
@@ -128,7 +123,7 @@ export const menuItems: MenuItem[] = [
     price: 5500,
     category: 'plat',
     meal: 'dinner',
-    image: thiebImage,
+    image: '',
     available: true,
   },
   {
@@ -138,7 +133,7 @@ export const menuItems: MenuItem[] = [
     price: 6500,
     category: 'plat',
     meal: 'dinner',
-    image: repasImage,
+    image: '',
     available: true,
   },
   {
@@ -148,7 +143,7 @@ export const menuItems: MenuItem[] = [
     price: 5000,
     category: 'plat',
     meal: 'dinner',
-    image: mbaxalImage,
+    image: '',
     available: true,
   },
   {
@@ -158,7 +153,7 @@ export const menuItems: MenuItem[] = [
     price: 2000,
     category: 'entree',
     meal: 'dinner',
-    image: restaurantImage,
+    image: '',
     available: true,
   },
   {
@@ -168,7 +163,7 @@ export const menuItems: MenuItem[] = [
     price: 1800,
     category: 'dessert',
     meal: 'dinner',
-    image: repasImage,
+    image: '',
     available: true,
   },
 
@@ -180,7 +175,7 @@ export const menuItems: MenuItem[] = [
     price: 800,
     category: 'boisson',
     meal: 'any',
-    image: bissapImage,
+    image: '',
     available: true,
   },
   {
@@ -190,7 +185,7 @@ export const menuItems: MenuItem[] = [
     price: 1000,
     category: 'boisson',
     meal: 'any',
-    image: mbaxalImage,
+    image: '',
     available: true,
   },
   {
@@ -200,7 +195,7 @@ export const menuItems: MenuItem[] = [
     price: 900,
     category: 'boisson',
     meal: 'any',
-    image: restaurantImage,
+    image: '',
     available: true,
   },
   {
@@ -210,7 +205,7 @@ export const menuItems: MenuItem[] = [
     price: 500,
     category: 'boisson',
     meal: 'any',
-    image: restaurantImage,
+    image: '',
     available: true,
   },
   {
@@ -220,7 +215,7 @@ export const menuItems: MenuItem[] = [
     price: 700,
     category: 'boisson',
     meal: 'any',
-    image: restaurantImage,
+    image: '',
     available: true,
   },
 ];
