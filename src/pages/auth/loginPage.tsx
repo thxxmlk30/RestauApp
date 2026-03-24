@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, ChefHat } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
-import authImage from '../../assets/hero.png';
+import authImage from '../../assets/login_register.webp';
 
 interface LoginForm {
     email: string;
@@ -18,7 +18,6 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
     const {
         register,
         handleSubmit,
@@ -34,32 +33,21 @@ export default function LoginPage() {
     useEffect(() => {
         if (isAuthenticated && redirectTarget) {
             navigate(redirectTarget, { replace: true });
+        } else if (isAuthenticated && user) {
+            navigate(user.role === 'admin' ? '/dashboard' : '/mes-commandes', { replace: true });
         }
-    }, [isAuthenticated, navigate, redirectTarget]);
-
-    useEffect(() => {
-        if (!isAuthenticated || !user) return;
-        if (redirectTarget) return;
-        navigate(user.role === 'admin' ? '/dashboard' : '/mes-commandes', { replace: true });
     }, [isAuthenticated, navigate, redirectTarget, user]);
-
-    useEffect(() => {
-        if (pendingRedirect === null) return;
-        if (!user) return;
-        const destination =
-            pendingRedirect ||
-            (user.role === 'admin' ? '/dashboard' : '/mes-commandes');
-        setPendingRedirect(null);
-        navigate(destination, { replace: true });
-    }, [navigate, pendingRedirect, user]);
 
     const onSubmit = async (data: LoginForm) => {
         setLoading(true);
         setError('');
         await new Promise((r) => setTimeout(r, 800));
         const success = login(data.email, data.password);
-        if (success) setPendingRedirect(redirectTarget || '');
-        else setError('Email ou mot de passe incorrect');
+        if (success) {
+            // Navigation will be handled by the useEffect
+        } else {
+            setError('Email ou mot de passe incorrect');
+        }
         setLoading(false);
     };
 
@@ -156,8 +144,7 @@ export default function LoginPage() {
 
                         <div className="mt-4 p-3 bg-gray-50 rounded-xl text-xs text-gray-500">
                             <p className="font-semibold text-gray-600">Démo</p>
-                            <p className="mt-1">Admin : <span className="font-mono">admin@thembaxxal.sn</span> / <span className="font-mono">admin123</span></p>
-                            <p>Client : <span className="font-mono">client@thembaxxal.sn</span> / <span className="font-mono">client123</span></p>
+                            <p className="mt-1">Admin : <span className="font-mono">admin@restaurant.com</span> / <span className="font-mono">Resataurant1234</span></p>
                         </div>
                     </div>
                 </div>

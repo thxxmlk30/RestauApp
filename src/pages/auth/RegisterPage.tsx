@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { ChefHat } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import authImage from '../../assets/hero.png';
+import authImage from '../../assets/login_register.webp';
 import { useAuth } from '../../context/AuthContext';
 
 interface RegisterForm {
