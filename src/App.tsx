@@ -5,7 +5,11 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/auth/loginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForotPasswordPage';
-import DashboardPage from './pages/dashboard/DashboardPage';
+import DashboardLayout from './pages/dashboard/DashboardLayout';
+import DashboardOverviewPage from './pages/dashboard/DashboardOverviewPage';
+import DashboardOrdersPage from './pages/dashboard/DashboardOrdersPage';
+import DashboardStatsPage from './pages/dashboard/DashboardStatsPage';
+import DashboardMenuPage from './pages/dashboard/DashboardMenuPage';
 import MyOrdersPage from './pages/orders/MyOrdersPage';
 import CartModal from './components/ordering/Cartmodal';
 
@@ -40,10 +44,15 @@ export default function App() {
           path="/dashboard"
           element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <DashboardPage />
+              <DashboardLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<DashboardOverviewPage />} />
+          <Route path="stats" element={<DashboardStatsPage />} />
+          <Route path="orders" element={<DashboardOrdersPage />} />
+          <Route path="menu" element={<DashboardMenuPage />} />
+        </Route>
 
         <Route
           path="/mes-commandes"
