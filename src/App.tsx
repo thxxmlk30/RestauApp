@@ -3,7 +3,7 @@ import { useAuth } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
 import Connexion from './pages/auth/loginPage';
 import Inscription from './pages/auth/RegisterPage';
-import MdpOublie from './pages/auth/ForotPasswordPage';
+import MdpOublie from './pages/auth/ForgotPasswordPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 
 // Composant qui protège les routes privées
@@ -17,6 +17,7 @@ export default function App() {
   return (
     <Routes>
       <Route path='/' element={<LandingPage />} />
+      <Route path='/login' element={<Connexion />} />
       <Route path='/connexion' element={<Connexion />} />
       <Route path='/inscription' element={<Inscription />} />
       <Route path='/mdp-oublie' element={<MdpOublie />} />
