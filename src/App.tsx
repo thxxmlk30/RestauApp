@@ -12,6 +12,7 @@ import DashboardStatsPage from './pages/dashboard/DashboardStatsPage';
 import DashboardMenuPage from './pages/dashboard/DashboardMenuPage';
 import MyOrdersPage from './pages/orders/MyOrdersPage';
 import CartModal from './components/ordering/Cartmodal';
+import ScrollToHash from './components/layout/ScrollToHash';
 
 // Composant qui protège les routes privées
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: User['role'][] }) {
@@ -34,6 +35,7 @@ export default function App() {
 
   return (
     <>
+      <ScrollToHash />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
