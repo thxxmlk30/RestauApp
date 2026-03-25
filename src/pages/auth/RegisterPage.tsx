@@ -32,7 +32,7 @@ export default function RegisterPage() {
         setLoading(true);
         setFormError('');
         await new Promise((r) => setTimeout(r, 400));
-        const result = registerUser(data.name, data.email, data.password);
+        const result = registerUser({ name: data.name, email: data.email, password: data.password });
         if (!result.ok) {
             setFormError(result.error ?? "Impossible de créer le compte.");
             setLoading(false);

@@ -2,12 +2,13 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { User } from '../types';
 
+type RegisterData = { name: string; email: string; password: string };
+
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => boolean;
-  registerUser: (data: { name: string; email: string; password: string }) => { ok: boolean; error?: string };
+  registerUser: (data: RegisterData) => { ok: boolean; error?: string };
   logout: () => void;
-  registerUser: (name: string, email: string, password: string) => { ok: boolean; error?: string };
   isAuthenticated: boolean;
 }
 
@@ -29,7 +30,7 @@ export function AuthProvider({ children } : {children:ReactNode}){
         return false;
     };
 
-    const registerUser = (data: { name: string; email: string; password: string }): { ok: boolean; error?: string } => {
+    const registerUser = (data: RegisterData): { ok: boolean; error?: string } => {
         // Basic validation
         if (!data.name || data.name.trim().length < 2) {
             return { ok: false, error: 'Le nom doit contenir au moins 2 caractères' };
