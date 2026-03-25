@@ -1,3 +1,5 @@
+import bgImage from '../../assets/mbaxal.webp';
+
 const testimonials = [
   {
     id: 1,
@@ -30,7 +32,15 @@ const testimonials = [
 
 export default function TestimonialsSection() {
   return (
-    <section id="avis" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <section id="avis" className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
+      <img
+        src={bgImage}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-10"
+        loading="lazy"
+        decoding="async"
+      />
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="font-display text-4xl font-bold text-secondary-900 mb-4">Ce que disent nos clients</h2>

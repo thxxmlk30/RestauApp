@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
@@ -79,8 +80,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart((prev) => {
       if (nextQuantity <= 0) {
         if (!prev[id]) return prev;
-        const { [id]: _, ...rest } = prev;
-        return rest;
+        const next = { ...prev };
+        delete next[id];
+        return next;
       }
       if (prev[id] === nextQuantity) return prev;
       return { ...prev, [id]: nextQuantity };
@@ -96,8 +98,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const nextQty = (prev[id] ?? 0) - 1;
       if (nextQty <= 0) {
         if (!prev[id]) return prev;
-        const { [id]: _, ...rest } = prev;
-        return rest;
+        const next = { ...prev };
+        delete next[id];
+        return next;
       }
       return { ...prev, [id]: nextQty };
     });
@@ -106,8 +109,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeItem = (id: string) => {
     setCart((prev) => {
       if (!prev[id]) return prev;
-      const { [id]: _, ...rest } = prev;
-      return rest;
+      const next = { ...prev };
+      delete next[id];
+      return next;
     });
   };
 

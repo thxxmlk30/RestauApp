@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { ChefHat } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import authImage from '../../assets/hero.png';
+import authImage from '../../assets/login_register.webp';
 import { useAuth } from '../../context/AuthContext';
 
 interface RegisterForm {
@@ -48,20 +48,20 @@ export default function RegisterPage() {
             <div className="w-full max-w-5xl">
                 <div className="grid md:grid-cols-2 overflow-hidden rounded-3xl shadow-2xl bg-white">
                     <div className="relative min-h-44 md:min-h-[640px]">
-                        <img src={authImage} alt="THE Mbaxxal" className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={authImage} alt="Linguere" className="absolute inset-0 h-full w-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-br from-secondary-900/85 via-secondary-900/35 to-transparent" />
                         <div className="relative h-full p-8 md:p-10 flex flex-col justify-between">
                             <div className="inline-flex items-center gap-2 text-white/90">
                                 <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center">
                                     <ChefHat size={20} className="text-white" />
                                 </div>
-                                <span className="font-display text-2xl font-bold">THE Mbaxxal</span>
+                                <span className="font-display text-2xl font-bold">Linguere</span>
                             </div>
                             <div className="max-w-sm">
                                 <p className="text-white/90 text-sm font-medium">Créer un accès</p>
                                 <h2 className="text-white font-display text-4xl font-bold mt-2">Espace gestion</h2>
                                 <p className="text-white/80 mt-3 text-sm leading-relaxed">
-                                    Inscris-toi pour accéder au dashboard et administrer le menu (CRUD admin).
+                                    Inscris-toi pour commander et suivre tes commandes. (Le dashboard est réservé à l'admin.)
                                 </p>
                             </div>
                         </div>
@@ -87,7 +87,7 @@ export default function RegisterPage() {
                             <Input
                                 label="Adresse email"
                                 type="email"
-                                placeholder="manager@thembaxxal.sn"
+                                placeholder="client@linguere.sn"
                                 error={errors.email?.message}
                                 {...register('email', {
                                     required: "L'email est requis",

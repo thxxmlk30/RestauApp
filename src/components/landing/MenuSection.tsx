@@ -6,6 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { loadMenuItems } from '../../utils/storage';
 import { formatCurrency } from '../../utils/helpers';
 import { Button } from '../ui/Button';
+import menuBannerImage from '../../assets/thieb.webp';
 
 function getSuggestedMeal(): Meal {
   const hour = new Date().getHours();
@@ -44,9 +45,21 @@ export default function MenuSection() {
   return (
     <section id="menu" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-10">
-          <h2 className="font-display text-4xl font-bold text-secondary-900 mb-3">Menu</h2>
-          <p className="text-gray-500 text-lg">Choisissez le moment, découvrez nos plats sénégalais, et commandez en quelques clics.</p>
+        <div className="relative overflow-hidden rounded-3xl border border-gray-100 bg-secondary-900 mb-10">
+          <img
+            src={menuBannerImage}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover opacity-25"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="relative p-8 md:p-10">
+            <h2 className="font-display text-4xl font-bold text-white">La carte Linguere</h2>
+            <p className="text-white/80 text-lg mt-2 max-w-2xl">
+              Des incontournables sénégalais (thiéboudienne, yassa, mafé…) et des “World Specials” selon la saison.
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">

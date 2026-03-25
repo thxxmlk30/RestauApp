@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/Button';
 import { ArrowRight, Star } from 'lucide-react';
+import heroImage from '../../assets/Repas5etoiles.webp';
 
 export default function Hero() {
   return (
@@ -41,9 +42,11 @@ export default function Hero() {
           <div className="relative">
             <div className="w-full h-96 lg:h-[500px] rounded-3xl bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&auto=format&fit=crop"
-                alt="Plat gastronomique"
+                src={heroImage}
+                alt="Plat sénégalais"
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
               />
             </div>
             {/* Badge flottant */}

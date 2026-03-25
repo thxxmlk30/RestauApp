@@ -1,5 +1,5 @@
 import { CheckCircle2, Minus, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { MenuItem, Order } from '../../types';
 import { menuItems as defaultMenuItems } from '../../data/menuItems';
@@ -19,11 +19,12 @@ export default function CartModal() {
   const location = useLocation();
 
   const [customerName, setCustomerName] = useState('');
+  const [nameTouched, setNameTouched] = useState(false);
   const [tableNumber, setTableNumber] = useState<number>(1);
   const [formError, setFormError] = useState('');
   const [successOrderId, setSuccessOrderId] = useState('');
 
-  const items = useMemo(() => loadMenuItems(defaultMenuItems), [isCartOpen]);
+  const items = useMemo(() => loadMenuItems(defaultMenuItems), []);
 
   const cartLines = useMemo(() => {
     const byId = new Map(items.map((i) => [i.id, i]));
@@ -38,20 +39,16 @@ export default function CartModal() {
 
   const cartTotal = useMemo(() => cartLines.reduce((sum, l) => sum + l.lineTotal, 0), [cartLines]);
 
-  useEffect(() => {
-    if (!isCartOpen) {
-      setCustomerName('');
-      setTableNumber(1);
-      setFormError('');
-      setSuccessOrderId('');
-    }
-  }, [isCartOpen]);
+  const handleClose = () => {
+    setCustomerName('');
+    setNameTouched(false);
+    setTableNumber(1);
+    setFormError('');
+    setSuccessOrderId('');
+    closeCart();
+  };
 
-  useEffect(() => {
-    if (!isCartOpen) return;
-    if (!isAuthenticated) return;
-    setCustomerName((prev) => prev || user?.name || '');
-  }, [isAuthenticated, isCartOpen, user?.name]);
+  const displayCustomerName = isAuthenticated && !nameTouched ? user?.name ?? '' : customerName;
 
   const submitOrder = () => {
     setFormError('');
@@ -96,7 +93,7 @@ export default function CartModal() {
   };
 
   return (
-    <Modal open={isCartOpen} title="Panier" onClose={closeCart}>
+    <Modal open={isCartOpen} title="Panier" onClose={handleClose}>
       {successOrderId ? (
         <div className="text-center">
           <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -116,18 +113,18 @@ export default function CartModal() {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    closeCart();
+                    handleClose();
                     navigate('/mes-commandes');
                   }}
                 >
                   Voir mes commandes
                 </Button>
               ) : (
-                <Button type="button" variant="outline" onClick={closeCart}>
+                <Button type="button" variant="outline" onClick={handleClose}>
                   Continuer
                 </Button>
               )}
-              <Button type="button" className="w-full" onClick={closeCart}>
+              <Button type="button" className="w-full" onClick={handleClose}>
                 Fermer
               </Button>
             </div>
@@ -139,7 +136,7 @@ export default function CartModal() {
             <div className="text-center py-6">
               <p className="text-sm text-gray-500">Votre panier est vide.</p>
               <div className="mt-4">
-                <Button type="button" variant="outline" className="w-full" onClick={closeCart}>
+                <Button type="button" variant="outline" className="w-full" onClick={handleClose}>
                   Continuer
                 </Button>
               </div>
@@ -208,8 +205,11 @@ export default function CartModal() {
                   <Input
                     label="Nom (optionnel)"
                     placeholder="Ex: Famille Ndiaye"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
+                    value={displayCustomerName}
+                    onChange={(e) => {
+                      setCustomerName(e.target.value);
+                      setNameTouched(true);
+                    }}
                   />
                 </div>
               ) : (
@@ -219,7 +219,7 @@ export default function CartModal() {
                     variant="primary"
                     onClick={() => {
                       const redirect = encodeURIComponent(`${location.pathname}${location.search}`);
-                      closeCart();
+                      handleClose();
                       navigate(`/login?redirect=${redirect}`);
                     }}
                   >
@@ -230,7 +230,7 @@ export default function CartModal() {
                     variant="outline"
                     onClick={() => {
                       const redirect = encodeURIComponent(`${location.pathname}${location.search}`);
-                      closeCart();
+                      handleClose();
                       navigate(`/register?redirect=${redirect}`);
                     }}
                   >
@@ -246,7 +246,7 @@ export default function CartModal() {
               )}
 
               <div className="flex items-center gap-3">
-                <Button type="button" variant="outline" className="w-full" onClick={closeCart}>
+                <Button type="button" variant="outline" className="w-full" onClick={handleClose}>
                   Annuler
                 </Button>
                 <Button type="button" className="w-full" onClick={submitOrder} disabled={!isAuthenticated}>
