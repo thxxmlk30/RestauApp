@@ -4,7 +4,7 @@ import type { User } from './types';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/auth/loginPage';
 import RegisterPage from './pages/auth/RegisterPage';
-import ForgotPasswordPage from './pages/auth/ForotPasswordPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import DashboardLayout from './pages/dashboard/DashboardLayout';
 import DashboardOverviewPage from './pages/dashboard/DashboardOverviewPage';
 import DashboardOrdersPage from './pages/dashboard/DashboardOrdersPage';
