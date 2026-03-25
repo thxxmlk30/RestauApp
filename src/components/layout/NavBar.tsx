@@ -4,6 +4,7 @@ import { Menu, X, ShoppingCart } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import logo from '../../assets/logo-linguere.svg';
 
 export function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +18,8 @@ export function NavBar() {
     <nav className="bg-white shadow-md fixed w-full top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2" aria-label="Accueil">
+            <img src={logo} alt="Linguere" className="h-9 w-9" />
             <span className="text-2xl font-bold text-primary-600">Linguere</span>
           </Link>
 
