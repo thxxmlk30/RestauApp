@@ -1,73 +1,75 @@
-# React + TypeScript + Vite
+# Linguere – Restaurant sénégalais (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Linguere** est une application web (démo) de restaurant : landing page, carte par repas, panier/commandes, espace client et dashboard admin.
 
-Currently, two official plugins are available:
+## Fonctionnalités
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Landing page** : Hero, Menu, Avis clients, À propos.
+- **Carte par repas** : petit-déjeuner / déjeuner / dîner (avec disponibilité des plats).
+- **Panier & commande** : ajout/suppression d’articles, validation de commande via une modale.
+- **Espace client** : inscription + connexion, accès à “Mes commandes”.
+- **Dashboard (admin)** :
+  - Aperçu (KPIs + dernières commandes)
+  - Statistiques (graphiques Recharts)
+  - Commandes (filtre + changement de statut + suppression)
+  - Menu (CRUD)
+- **Stockage local** : données persistées dans `localStorage` (pas de backend).
 
-## React Compiler
+## Comptes de démo
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Admin** : `admin@linguere.sn` / `Linguere1234`
+- **Client** : crée un compte via `/register`, puis connecte-toi via `/login`
 
-## Expanding the ESLint configuration
+## Prérequis
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Ce projet utilise Vite. Vérifie ta version de Node.js :
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Node.js** : `^20.19.0` ou `>= 22.12.0`
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# dev
+npm run dev
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# build
+npm run build
+
+# preview (après build)
+npm run preview
+
+# lint
+npm run lint
 ```
+
+## Déploiement (Vercel)
+
+Configuration recommandée :
+
+- **Framework** : Vite
+- **Build Command** : `npm run build`
+- **Output Directory** : `dist`
+- **Node.js** : `20.19+` (ou `22.12+`)
+- **Branch** : `main`
+
+## Données locales (localStorage)
+
+Clés utilisées :
+
+- `restauapp.menuItems.v1` : items du menu (CRUD)
+- `restauapp.orders.v1` : commandes
+- `restauapp.users.v1` : utilisateurs inscrits (démo)
+- `restauapp.session.v1` : session utilisateur
+
+Pour réinitialiser l’app, supprime ces clés dans le stockage du navigateur.
+
+## Notes
+
+- Projet **front-end only** (démo) : pas de paiement, pas d’API, pas de sécurité côté serveur.
+- Ne pas utiliser ce système d’auth en production (mots de passe stockés côté client).
