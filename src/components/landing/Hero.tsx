@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/Button';
 import { ArrowRight, Star } from 'lucide-react';
-import heroImage from '../../assets/Repas5etoiles.webp';
+import heroImage from '../../assets/first.webp';
 
 export default function Hero() {
   return (

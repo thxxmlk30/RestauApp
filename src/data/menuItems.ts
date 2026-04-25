@@ -1,5 +1,40 @@
 import type { MenuItem } from '../types';
 
+// Import all images
+import cafeToubaa from '../assets/cafe toubaa.webp';
+import theWebp from '../assets/thé.webp';
+import beignetsWebp from '../assets/beignets.webp';
+import painTapalapaWebp from '../assets/pain tapalapa.webp';
+import bouillieMilWebp from '../assets/Bouillie de mil.webp';
+import fruitsSaisonWebp from '../assets/Fruits frais de saison.webp';
+import croissantBeurreWebp from '../assets/croissant beurre.webp';
+import shakshukaWebp from '../assets/Shakshuka.webp';
+import thiebouDjienWebp from '../assets/thiebou djien.webp';
+import pouletYassaWebp from '../assets/Poulet Yassa.webp';
+import mafeBoeufWebp from '../assets/Mafé boeuf.webp';
+import fatayaWebp from '../assets/Fataya.webp';
+import thiakryJpg from '../assets/Thiakry.jpg';
+import ceebuYappWebp from '../assets/Ceebu Yapp.webp';
+import pastelsWebp from '../assets/Pastels.webp';
+import couscousMarocWebp from '../assets/Couscous royal (Maroc).webp';
+import pizzaItalieWebp from '../assets/Pizza Margherita (Italie).webp';
+import tacosMexiqueWebp from '../assets/Tacos poulet épicé (Mexique).webp';
+import poissonBraiseWebp from '../assets/Poisson braisé.webp';
+import dibiAgneauWebp from '../assets/Dibi d\'agneau.webp';
+import soupouKandjaJpg from '../assets/Soupou Kandja.jpg';
+import ngalakhWebp from '../assets/Ngalakh.webp';
+import butterChickenWebp from '../assets/Butter Chicken (Inde).webp';
+import pouletTeriyakiWebp from '../assets/Poulet Teriyaki (Japon).webp';
+import paellaWebp from '../assets/Paella fruits de mer.webp';
+import tiramisuWebp from '../assets/Tiramisu.webp';
+import brochettesPouletWebp from '../assets/Brochettes de poulet.webp';
+import bissapWebp from '../assets/Bissap.webp';
+import bouyeWebp from '../assets/Bouye (baobab).webp';
+import jusGingembreWebp from '../assets/Jus de gingembre.webp';
+import boireWebp from '../assets/boire.webp';
+import soda33clWebp from '../assets/Soda 33cl.webp';
+import limonadeMaisonWebp from '../assets/Limonade maison.webp';
+
 export const menuItems: MenuItem[] = [
   // Petit-déjeuner
   {
@@ -9,7 +44,7 @@ export const menuItems: MenuItem[] = [
     price: 500,
     category: 'boisson',
     meal: 'breakfast',
-    image: '',
+    image: cafeToubaa,
     available: true,
   },
   {
@@ -19,7 +54,7 @@ export const menuItems: MenuItem[] = [
     price: 700,
     category: 'boisson',
     meal: 'breakfast',
-    image: '',
+    image: theWebp,
     available: true,
   },
   {
@@ -29,7 +64,7 @@ export const menuItems: MenuItem[] = [
     price: 800,
     category: 'dessert',
     meal: 'breakfast',
-    image: '',
+    image: beignetsWebp,
     available: true,
   },
   {
@@ -39,7 +74,7 @@ export const menuItems: MenuItem[] = [
     price: 2000,
     category: 'plat',
     meal: 'breakfast',
-    image: '',
+    image: painTapalapaWebp,
     available: true,
   },
   {
@@ -49,7 +84,7 @@ export const menuItems: MenuItem[] = [
     price: 1200,
     category: 'dessert',
     meal: 'breakfast',
-    image: '',
+    image: bouillieMilWebp,
     available: true,
   },
   {
@@ -59,7 +94,7 @@ export const menuItems: MenuItem[] = [
     price: 1500,
     category: 'dessert',
     meal: 'breakfast',
-    image: '',
+    image: fruitsSaisonWebp,
     available: true,
   },
   {
@@ -69,7 +104,7 @@ export const menuItems: MenuItem[] = [
     price: 900,
     category: 'dessert',
     meal: 'breakfast',
-    image: '',
+    image: croissantBeurreWebp,
     available: true,
   },
   {
@@ -79,7 +114,7 @@ export const menuItems: MenuItem[] = [
     price: 2800,
     category: 'plat',
     meal: 'breakfast',
-    image: '',
+    image: shakshukaWebp,
     available: true,
   },
 
@@ -91,7 +126,7 @@ export const menuItems: MenuItem[] = [
     price: 4500,
     category: 'plat',
     meal: 'lunch',
-    image: '',
+    image: thiebouDjienWebp,
     available: true,
   },
   {
@@ -101,7 +136,7 @@ export const menuItems: MenuItem[] = [
     price: 4000,
     category: 'plat',
     meal: 'lunch',
-    image: '',
+    image: pouletYassaWebp,
     available: true,
   },
   {
@@ -111,7 +146,7 @@ export const menuItems: MenuItem[] = [
     price: 4500,
     category: 'plat',
     meal: 'lunch',
-    image: '',
+    image: mafeBoeufWebp,
     available: true,
   },
   {
@@ -121,7 +156,7 @@ export const menuItems: MenuItem[] = [
     price: 1500,
     category: 'entree',
     meal: 'lunch',
-    image: '',
+    image: fatayaWebp,
     available: true,
   },
   {
@@ -131,7 +166,7 @@ export const menuItems: MenuItem[] = [
     price: 2000,
     category: 'entree',
     meal: 'lunch',
-    image: '',
+    image: fruitsSaisonWebp,
     available: true,
   },
   {
@@ -141,7 +176,7 @@ export const menuItems: MenuItem[] = [
     price: 1500,
     category: 'dessert',
     meal: 'lunch',
-    image: '',
+    image: thiakryJpg,
     available: true,
   },
   {
@@ -151,7 +186,7 @@ export const menuItems: MenuItem[] = [
     price: 4800,
     category: 'plat',
     meal: 'lunch',
-    image: '',
+    image: ceebuYappWebp,
     available: true,
   },
   {
@@ -161,7 +196,7 @@ export const menuItems: MenuItem[] = [
     price: 2200,
     category: 'entree',
     meal: 'lunch',
-    image: '',
+    image: pastelsWebp,
     available: true,
   },
   {
@@ -171,7 +206,7 @@ export const menuItems: MenuItem[] = [
     price: 5200,
     category: 'plat',
     meal: 'lunch',
-    image: '',
+    image: couscousMarocWebp,
     available: true,
   },
   {
@@ -181,7 +216,7 @@ export const menuItems: MenuItem[] = [
     price: 5500,
     category: 'plat',
     meal: 'lunch',
-    image: '',
+    image: pizzaItalieWebp,
     available: true,
   },
   {
@@ -191,7 +226,7 @@ export const menuItems: MenuItem[] = [
     price: 3800,
     category: 'plat',
     meal: 'lunch',
-    image: '',
+    image: tacosMexiqueWebp,
     available: true,
   },
 
@@ -203,7 +238,7 @@ export const menuItems: MenuItem[] = [
     price: 5500,
     category: 'plat',
     meal: 'dinner',
-    image: '',
+    image: poissonBraiseWebp,
     available: true,
   },
   {
@@ -213,7 +248,7 @@ export const menuItems: MenuItem[] = [
     price: 6500,
     category: 'plat',
     meal: 'dinner',
-    image: '',
+    image: dibiAgneauWebp,
     available: true,
   },
   {
@@ -223,7 +258,7 @@ export const menuItems: MenuItem[] = [
     price: 5000,
     category: 'plat',
     meal: 'dinner',
-    image: '',
+    image: soupouKandjaJpg,
     available: true,
   },
   {
@@ -233,7 +268,7 @@ export const menuItems: MenuItem[] = [
     price: 2200,
     category: 'entree',
     meal: 'dinner',
-    image: '',
+    image: pastelsWebp,
     available: true,
   },
   {
@@ -243,7 +278,7 @@ export const menuItems: MenuItem[] = [
     price: 1800,
     category: 'dessert',
     meal: 'dinner',
-    image: '',
+    image: ngalakhWebp,
     available: true,
   },
   {
@@ -253,7 +288,7 @@ export const menuItems: MenuItem[] = [
     price: 6200,
     category: 'plat',
     meal: 'dinner',
-    image: '',
+    image: butterChickenWebp,
     available: true,
   },
   {
@@ -263,7 +298,7 @@ export const menuItems: MenuItem[] = [
     price: 5900,
     category: 'plat',
     meal: 'dinner',
-    image: '',
+    image: pouletTeriyakiWebp,
     available: true,
   },
   {
@@ -273,7 +308,7 @@ export const menuItems: MenuItem[] = [
     price: 7500,
     category: 'plat',
     meal: 'dinner',
-    image: '',
+    image: paellaWebp,
     available: true,
   },
   {
@@ -283,7 +318,7 @@ export const menuItems: MenuItem[] = [
     price: 2500,
     category: 'dessert',
     meal: 'dinner',
-    image: '',
+    image: tiramisuWebp,
     available: true,
   },
   {
@@ -293,7 +328,7 @@ export const menuItems: MenuItem[] = [
     price: 4500,
     category: 'plat',
     meal: 'dinner',
-    image: '',
+    image: brochettesPouletWebp,
     available: true,
   },
 
@@ -305,7 +340,7 @@ export const menuItems: MenuItem[] = [
     price: 800,
     category: 'boisson',
     meal: 'any',
-    image: '',
+    image: bissapWebp,
     available: true,
   },
   {
@@ -315,7 +350,7 @@ export const menuItems: MenuItem[] = [
     price: 1000,
     category: 'boisson',
     meal: 'any',
-    image: '',
+    image: bouyeWebp,
     available: true,
   },
   {
@@ -325,7 +360,7 @@ export const menuItems: MenuItem[] = [
     price: 900,
     category: 'boisson',
     meal: 'any',
-    image: '',
+    image: jusGingembreWebp,
     available: true,
   },
   {
@@ -335,7 +370,7 @@ export const menuItems: MenuItem[] = [
     price: 500,
     category: 'boisson',
     meal: 'any',
-    image: '',
+    image: boireWebp,
     available: true,
   },
   {
@@ -345,7 +380,7 @@ export const menuItems: MenuItem[] = [
     price: 700,
     category: 'boisson',
     meal: 'any',
-    image: '',
+    image: soda33clWebp,
     available: true,
   },
   {
@@ -355,7 +390,7 @@ export const menuItems: MenuItem[] = [
     price: 900,
     category: 'boisson',
     meal: 'any',
-    image: '',
+    image: limonadeMaisonWebp,
     available: true,
   },
 ];

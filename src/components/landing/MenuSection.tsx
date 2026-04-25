@@ -6,7 +6,8 @@ import { useCart } from '../../context/CartContext';
 import { loadMenuItems } from '../../utils/storage';
 import { formatCurrency } from '../../utils/helpers';
 import { Button } from '../ui/Button';
-import menuBannerImage from '../../assets/thieb.webp';
+import menuBannerImage from '../../assets/cover.webp';
+import manuBannerImage2 from '../../assets/pasta.jpg';
 
 function getSuggestedMeal(): Meal {
   const hour = new Date().getHours();
@@ -45,15 +46,30 @@ export default function MenuSection() {
   return (
     <section id="menu" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="relative overflow-hidden rounded-3xl border border-gray-100 bg-secondary-900 mb-10">
-          <img
-            src={menuBannerImage}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover opacity-25"
-            loading="lazy"
-            decoding="async"
-          />
+        <div className="relative overflow-hidden rounded-3xl border border-gray-100 bg-secondary-900 mb-10 h-96 flex items-center">
+          <div className="absolute inset-0 flex overflow-hidden rounded-3xl">
+            <div className="w-1/2 h-full pr-3">
+              <img
+                src={menuBannerImage}
+                alt=""
+                aria-hidden="true"
+                className="w-full h-full object-cover opacity-30"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div className="w-1/2 h-full pl-3">
+              <img
+                src={manuBannerImage2}
+                alt=""
+                aria-hidden="true"
+                className="w-full h-full object-cover opacity-30"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
+
           <div className="relative p-8 md:p-10">
             <h2 className="font-display text-4xl font-bold text-white">La carte Linguere</h2>
             <p className="text-white/80 text-lg mt-2 max-w-2xl">
@@ -100,14 +116,28 @@ export default function MenuSection() {
           {visibleItems.map((item) => {
             const quantity = cart[item.id] ?? 0;
             return (
-              <article key={item.id} className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-secondary-900 truncate">{item.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+          <article key={item.id} className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-md transition-shadow">
+                  {item.image && (
+                    <div className="relative w-full h-32 mb-4 overflow-hidden rounded-xl bg-gray-100">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-secondary-900 truncate">{item.name}</h3>
+                      <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                    </div>
+                    <p className="font-bold text-secondary-900 whitespace-nowrap">{formatCurrency(item.price)}</p>
                   </div>
-                  <p className="font-bold text-secondary-900 whitespace-nowrap">{formatCurrency(item.price)}</p>
-                </div>
 
                 {item.available ? (
                   <div className="mt-4 flex items-center justify-between">
