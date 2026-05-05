@@ -33,9 +33,39 @@ export default {
         },
       },
       fontFamily: {
-        display: ['system-ui', 'sans-serif'],
+        display: ['"Georgia"', '"Times New Roman"', 'serif'],
+      },
+      animation: {
+        'tilt-in': 'tiltIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        'tilt-out': 'tiltOut 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        'lift': 'lift 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        'float': 'float 3s ease-in-out infinite',
+        'parallax-y': 'parallaxY 0.5s ease-out',
+      },
+      keyframes: {
+        tiltIn: {
+          '0%': { transform: 'rotateX(0deg) rotateY(0deg) translateZ(0)' },
+          '100%': { transform: 'rotateX(8deg) rotateY(8deg) translateZ(10px)' },
+        },
+        tiltOut: {
+          '0%': { transform: 'rotateX(8deg) rotateY(8deg) translateZ(10px)' },
+          '100%': { transform: 'rotateX(0deg) rotateY(0deg) translateZ(0)' },
+        },
+        lift: {
+          '0%, 100%': { transform: 'translateY(0px) scale(1)' },
+          '50%': { transform: 'translateY(-8px) scale(1.02)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        parallaxY: {
+          '0%': { transform: 'translateY(0px)' },
+          '100%': { transform: 'translateY(-20px)' },
+        },
       },
     },
   },
+
   plugins: [],
 }

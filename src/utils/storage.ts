@@ -1,7 +1,24 @@
-import type { Meal, MenuItem, Order, OrderStatus } from '../types';
+import type {
+  FavoriteItem,
+  Ingredient,
+  IngredientUnit,
+  Meal,
+  MenuItem,
+  Order,
+  OrderLocation,
+  OrderStatus,
+  ServiceType,
+  Staff,
+  StaffStatus,
+  User,
+  UserRole,
+} from '../types';
 
-const MENU_ITEMS_KEY = 'restauapp.menuItems.v1';
-const ORDERS_KEY = 'restauapp.orders.v1';
+const MENU_ITEMS_KEY = 'restauapp.menuItems.v2';
+const ORDERS_KEY = 'restauapp.orders.v3';
+const INGREDIENTS_KEY = 'restauapp.ingredients.v2';
+const STAFF_KEY = 'restauapp.staff.v2';
+const FAVORITES_KEY = 'restauapp.favorites.v1';
 
 function isBrowserStorageAvailable() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
@@ -17,7 +34,11 @@ function safeJsonParse(value: string) {
 
 const validMeals = new Set<Meal>(['breakfast', 'lunch', 'dinner', 'any']);
 const validCategories = new Set<MenuItem['category']>(['entree', 'plat', 'dessert', 'boisson']);
+const validUnits = new Set<IngredientUnit>(['kg', 'l', 'unit', 'g']);
+const validRoles = new Set<UserRole>(['admin', 'waiter', 'chef', 'delivery', 'customer']);
 const validOrderStatuses = new Set<OrderStatus>(['pending', 'preparing', 'ready', 'delivered', 'cancelled']);
+const validServiceTypes = new Set<ServiceType>(['dine_in', 'delivery']);
+const validStaffStatuses = new Set<StaffStatus>(['active', 'break', 'off']);
 
 function asString(value: unknown) {
   return typeof value === 'string' ? value : null;
@@ -43,10 +64,11 @@ function normalizeMenuItem(value: unknown): MenuItem | null {
   const meal = asString(item.meal);
   const image = asString(item.image);
   const available = asBoolean(item.available);
+  const prepTimeMinutes = asNumber(item.prepTimeMinutes);
 
-  if (!id || !name || !description || price === null || !category || !validCategories.has(category as MenuItem['category'])) return null;
-
-  const normalizedMeal: Meal = validMeals.has(meal as Meal) ? (meal as Meal) : 'any';
+  if (!id || !name || !description || price === null || !category || !validCategories.has(category as MenuItem['category'])) {
+    return null;
+  }
 
   return {
     id,
@@ -54,10 +76,20 @@ function normalizeMenuItem(value: unknown): MenuItem | null {
     description,
     price,
     category: category as MenuItem['category'],
-    meal: normalizedMeal,
+    meal: validMeals.has(meal as Meal) ? (meal as Meal) : 'any',
     image: image ?? '',
     available: available ?? true,
+    prepTimeMinutes: prepTimeMinutes ?? 20,
   };
+}
+
+function normalizeLocation(value: unknown): OrderLocation | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const location = value as Record<string, unknown>;
+  const lat = asNumber(location.lat);
+  const lng = asNumber(location.lng);
+  if (lat === null || lng === null) return undefined;
+  return { lat, lng };
 }
 
 function normalizeOrder(value: unknown): Order | null {
@@ -65,21 +97,41 @@ function normalizeOrder(value: unknown): Order | null {
   const order = value as Record<string, unknown>;
 
   const id = asString(order.id);
-  const tableNumber = asNumber(order.tableNumber);
   const status = asString(order.status);
   const totalAmount = asNumber(order.totalAmount);
   const createdAt = asString(order.createdAt);
+  const serviceType = asString(order.serviceType) ?? (asNumber(order.tableNumber) !== null ? 'dine_in' : 'delivery');
+  const tableNumber = asNumber(order.tableNumber);
+  const subtotalAmount = asNumber(order.subtotalAmount);
+  const discountAmount = asNumber(order.discountAmount);
   const customerName = asString(order.customerName);
   const userId = asString(order.userId);
   const userName = asString(order.userName);
   const userEmail = asString(order.userEmail);
+  const promoCode = asString(order.promoCode);
   const ratingRaw = asNumber(order.rating);
   const review = asString(order.review);
   const ratedAt = asString(order.ratedAt);
+  const deliveryAddress = asString(order.deliveryAddress);
+  const deliveryZoneId = asString(order.deliveryZoneId);
+  const deliveryDepartment = asString(order.deliveryDepartment);
+  const deliveryCommune = asString(order.deliveryCommune);
+  const deliverySector = asString(order.deliverySector);
+  const deliveryFee = asNumber(order.deliveryFee);
+  const deliveryNotes = asString(order.deliveryNotes);
+  const customerPhone = asString(order.customerPhone);
+  const assignedChefId = asString(order.assignedChefId);
+  const assignedChefName = asString(order.assignedChefName);
+  const courierId = asString(order.courierId);
+  const courierName = asString(order.courierName);
+  const estimatedReadyAt = asString(order.estimatedReadyAt);
+  const estimatedDeliveryAt = asString(order.estimatedDeliveryAt);
 
   const items = Array.isArray(order.items) ? order.items : null;
 
-  if (!id || tableNumber === null || !status || !validOrderStatuses.has(status as OrderStatus) || totalAmount === null || !createdAt || !items) return null;
+  if (!id || !status || !validOrderStatuses.has(status as OrderStatus) || totalAmount === null || !createdAt || !items) {
+    return null;
+  }
 
   const normalizedItems = items
     .map((raw) => {
@@ -98,67 +150,186 @@ function normalizeOrder(value: unknown): Order | null {
   if (normalizedItems.length === 0) return null;
 
   const rating =
-    ratingRaw !== null && Number.isInteger(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : null;
+    ratingRaw !== null && Number.isInteger(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : undefined;
 
   return {
     id,
-    tableNumber,
+    serviceType: validServiceTypes.has(serviceType as ServiceType) ? (serviceType as ServiceType) : 'dine_in',
+    tableNumber: tableNumber ?? undefined,
+    deliveryAddress: deliveryAddress ?? undefined,
+    deliveryZoneId: deliveryZoneId ?? undefined,
+    deliveryDepartment: deliveryDepartment ?? undefined,
+    deliveryCommune: deliveryCommune ?? undefined,
+    deliverySector: deliverySector ?? undefined,
+    deliveryFee: deliveryFee ?? undefined,
+    deliveryNotes: deliveryNotes ?? undefined,
+    customerPhone: customerPhone ?? undefined,
     items: normalizedItems,
     status: status as OrderStatus,
     totalAmount,
+    subtotalAmount: subtotalAmount ?? undefined,
+    discountAmount: discountAmount ?? undefined,
     createdAt,
     customerName: customerName ?? undefined,
     userId: userId ?? undefined,
     userName: userName ?? undefined,
     userEmail: userEmail ?? undefined,
-    rating: rating ?? undefined,
+    promoCode: promoCode ?? undefined,
+    rating,
+    location: normalizeLocation(order.location),
     review: review ?? undefined,
     ratedAt: ratedAt ?? undefined,
+    assignedChefId: assignedChefId ?? undefined,
+    assignedChefName: assignedChefName ?? undefined,
+    courierId: courierId ?? undefined,
+    courierName: courierName ?? undefined,
+    estimatedReadyAt: estimatedReadyAt ?? undefined,
+    estimatedDeliveryAt: estimatedDeliveryAt ?? undefined,
   };
 }
 
-export function loadMenuItems(fallback: MenuItem[]) {
+function normalizeUser(value: unknown): User | null {
+  if (!value || typeof value !== 'object') return null;
+  const user = value as Record<string, unknown>;
+
+  const id = asString(user.id);
+  const name = asString(user.name);
+  const email = asString(user.email);
+  const role = asString(user.role);
+
+  if (!id || !name || !email || !role || !validRoles.has(role as UserRole)) return null;
+
+  return { id, name, email, role: role as UserRole };
+}
+
+function normalizeIngredient(value: unknown): Ingredient | null {
+  if (!value || typeof value !== 'object') return null;
+  const item = value as Record<string, unknown>;
+
+  const id = asString(item.id);
+  const name = asString(item.name);
+  const currentStock = asNumber(item.currentStock);
+  const unit = asString(item.unit);
+  const minStock = asNumber(item.minStock);
+  const reorderThreshold = asNumber(item.reorderThreshold);
+  const supplier = asString(item.supplier);
+  const costPerUnit = asNumber(item.costPerUnit);
+  const lastRestockedAt = asString(item.lastRestockedAt);
+
+  if (!id || !name || currentStock === null || !unit || !validUnits.has(unit as IngredientUnit) || minStock === null || reorderThreshold === null) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    currentStock,
+    unit: unit as IngredientUnit,
+    minStock,
+    reorderThreshold,
+    supplier: supplier ?? undefined,
+    costPerUnit: costPerUnit ?? undefined,
+    lastRestockedAt: lastRestockedAt ?? undefined,
+  };
+}
+
+function normalizeStaff(value: unknown): Staff | null {
+  if (!value || typeof value !== 'object') return null;
+  const staff = value as Record<string, unknown>;
+
+  const userPart = normalizeUser(value);
+  if (!userPart) return null;
+
+  const phone = asString(staff.phone);
+  const salary = asNumber(staff.salary);
+  const hireDate = asString(staff.hireDate);
+  const shift = asString(staff.shift);
+  const zone = asString(staff.zone);
+  const status = asString(staff.status);
+
+  if (!phone || salary === null || !hireDate || !shift || !status || !validStaffStatuses.has(status as StaffStatus)) {
+    return null;
+  }
+
+  return {
+    ...userPart,
+    phone,
+    salary,
+    hireDate,
+    shift,
+    zone: zone ?? undefined,
+    status: status as StaffStatus,
+  };
+}
+
+function normalizeFavorite(value: unknown): FavoriteItem | null {
+  if (!value || typeof value !== 'object') return null;
+  const item = value as Record<string, unknown>;
+  const menuItemId = asString(item.menuItemId);
+  const addedAt = asString(item.addedAt);
+  if (!menuItemId || !addedAt) return null;
+  return { menuItemId, addedAt };
+}
+
+function loadList<T>(key: string, fallback: T[], normalize: (value: unknown) => T | null) {
   if (!isBrowserStorageAvailable()) return fallback;
   try {
-    const raw = window.localStorage.getItem(MENU_ITEMS_KEY);
+    const raw = window.localStorage.getItem(key);
     if (!raw) return fallback;
     const parsed = safeJsonParse(raw);
     if (!Array.isArray(parsed)) return fallback;
-    const normalized = parsed.map(normalizeMenuItem).filter(Boolean) as MenuItem[];
+    const normalized = parsed.map(normalize).filter(Boolean) as T[];
     return normalized.length > 0 ? normalized : fallback;
   } catch {
     return fallback;
   }
+}
+
+function saveList<T>(key: string, items: T[]) {
+  if (!isBrowserStorageAvailable()) return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(items));
+  } catch {
+    // ignore write errors
+  }
+}
+
+export function loadMenuItems(fallback: MenuItem[]) {
+  return loadList(MENU_ITEMS_KEY, fallback, normalizeMenuItem);
 }
 
 export function saveMenuItems(items: MenuItem[]) {
-  if (!isBrowserStorageAvailable()) return;
-  try {
-    window.localStorage.setItem(MENU_ITEMS_KEY, JSON.stringify(items));
-  } catch {
-    // ignore write errors
-  }
+  saveList(MENU_ITEMS_KEY, items);
 }
 
 export function loadOrders(fallback: Order[]) {
-  if (!isBrowserStorageAvailable()) return fallback;
-  try {
-    const raw = window.localStorage.getItem(ORDERS_KEY);
-    if (!raw) return fallback;
-    const parsed = safeJsonParse(raw);
-    if (!Array.isArray(parsed)) return fallback;
-    const normalized = parsed.map(normalizeOrder).filter(Boolean) as Order[];
-    return normalized.length > 0 ? normalized : fallback;
-  } catch {
-    return fallback;
-  }
+  return loadList(ORDERS_KEY, fallback, normalizeOrder);
 }
 
 export function saveOrders(orders: Order[]) {
-  if (!isBrowserStorageAvailable()) return;
-  try {
-    window.localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-  } catch {
-    // ignore write errors
-  }
+  saveList(ORDERS_KEY, orders);
+}
+
+export function loadIngredients(fallback: Ingredient[]) {
+  return loadList(INGREDIENTS_KEY, fallback, normalizeIngredient);
+}
+
+export function saveIngredients(items: Ingredient[]) {
+  saveList(INGREDIENTS_KEY, items);
+}
+
+export function loadStaff(fallback: Staff[]) {
+  return loadList(STAFF_KEY, fallback, normalizeStaff);
+}
+
+export function saveStaff(items: Staff[]) {
+  saveList(STAFF_KEY, items);
+}
+
+export function loadFavorites() {
+  return loadList<FavoriteItem>(FAVORITES_KEY, [], normalizeFavorite);
+}
+
+export function saveFavorites(items: FavoriteItem[]) {
+  saveList(FAVORITES_KEY, items);
 }

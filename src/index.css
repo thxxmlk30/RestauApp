@@ -1,3 +1,36 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[#fcfbfa] text-secondary-900 antialiased;
+    background-image:
+      radial-gradient(circle at top left, rgba(244, 139, 74, 0.08), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(28, 25, 23, 0.06), transparent 22%);
+  }
+
+  ::selection {
+    background: rgba(244, 139, 74, 0.22);
+    color: #1c1917;
+  }
+}
+
+@layer components {
+  .panel-3d {
+    box-shadow:
+      0 20px 42px rgba(28, 25, 23, 0.08),
+      0 4px 10px rgba(28, 25, 23, 0.05);
+    transform-style: preserve-3d;
+  }
+
+  .soft-3d {
+    box-shadow:
+      0 10px 20px rgba(244, 139, 74, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+}

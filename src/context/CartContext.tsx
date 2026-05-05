@@ -6,12 +6,14 @@ type CartMap = Record<string, number>;
 
 interface CartContextType {
   cart: CartMap;
+  promoCode: string | null;
   itemCount: number;
   setItemQuantity: (id: string, quantity: number) => void;
   increment: (id: string) => void;
   decrement: (id: string) => void;
   removeItem: (id: string) => void;
   clearCart: () => void;
+  setPromoCode: (code: string | null) => void;
   isCartOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
@@ -46,76 +48,98 @@ function normalizeCartMap(value: unknown): CartMap {
   return next;
 }
 
-function loadCart(): CartMap {
-  if (!isBrowserStorageAvailable()) return {};
+interface CartData {
+  cart: CartMap;
+  promoCode?: string | null;
+}
+
+function loadCart(): CartData {
+  if (!isBrowserStorageAvailable()) return { cart: {} };
   try {
     const raw = window.localStorage.getItem(CART_KEY);
-    if (!raw) return {};
-    const parsed = safeJsonParse(raw);
-    return normalizeCartMap(parsed);
+    if (!raw) return { cart: {} };
+    const parsed = safeJsonParse(raw) as { cart?: unknown; promoCode?: unknown } | null;
+    return {
+      cart: normalizeCartMap(parsed?.cart),
+      promoCode: typeof parsed?.promoCode === 'string' ? parsed.promoCode : null,
+    };
   } catch {
-    return {};
+    return { cart: {} };
   }
 }
 
-function saveCart(cart: CartMap) {
+function saveCart(data: CartData) {
   if (!isBrowserStorageAvailable()) return;
   try {
-    window.localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    window.localStorage.setItem(CART_KEY, JSON.stringify(data));
   } catch {
     // ignore write errors
   }
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartMap>(() => loadCart());
+  const [data, setData] = useState<CartData>(() => loadCart());
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+  const cart = data.cart;
+  const promoCode = data.promoCode ?? null;
+
   useEffect(() => {
-    saveCart(cart);
-  }, [cart]);
+    saveCart(data);
+  }, [data]);
 
   const setItemQuantity = (id: string, quantity: number) => {
     const nextQuantity = Math.max(0, Math.floor(quantity));
-    setCart((prev) => {
+    setData((prev) => {
+      const prevCart = prev.cart;
       if (nextQuantity <= 0) {
-        if (!prev[id]) return prev;
-        const next = { ...prev };
-        delete next[id];
-        return next;
+        if (!prevCart[id]) return prev;
+        const nextCart = { ...prevCart };
+        delete nextCart[id];
+        return { ...prev, cart: nextCart };
       }
-      if (prev[id] === nextQuantity) return prev;
-      return { ...prev, [id]: nextQuantity };
+      if (prevCart[id] === nextQuantity) return prev;
+      return { ...prev, cart: { ...prevCart, [id]: nextQuantity } };
     });
   };
 
   const increment = (id: string) => {
-    setCart((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
+    setData((prev) => ({
+      ...prev,
+      cart: { ...prev.cart, [id]: (prev.cart[id] ?? 0) + 1 },
+    }));
   };
 
   const decrement = (id: string) => {
-    setCart((prev) => {
-      const nextQty = (prev[id] ?? 0) - 1;
+    setData((prev) => {
+      const nextQty = (prev.cart[id] ?? 0) - 1;
       if (nextQty <= 0) {
-        if (!prev[id]) return prev;
-        const next = { ...prev };
-        delete next[id];
-        return next;
+        if (!prev.cart[id]) return prev;
+        const nextCart = { ...prev.cart };
+        delete nextCart[id];
+        return { ...prev, cart: nextCart };
       }
-      return { ...prev, [id]: nextQty };
+      return {
+        ...prev,
+        cart: { ...prev.cart, [id]: nextQty },
+      };
     });
   };
 
   const removeItem = (id: string) => {
-    setCart((prev) => {
-      if (!prev[id]) return prev;
-      const next = { ...prev };
-      delete next[id];
-      return next;
+    setData((prev) => {
+      if (!prev.cart[id]) return prev;
+      const nextCart = { ...prev.cart };
+      delete nextCart[id];
+      return { ...prev, cart: nextCart };
     });
   };
 
-  const clearCart = () => setCart({});
+  const clearCart = () => setData({ cart: {}, promoCode: null });
+
+  const setPromoCode = (code: string | null) => {
+    setData((prev) => ({ ...prev, promoCode: code }));
+  };
 
   const itemCount = useMemo(() => Object.values(cart).reduce((sum, qty) => sum + qty, 0), [cart]);
 
@@ -125,17 +149,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const value = useMemo<CartContextType>(
     () => ({
       cart,
+      promoCode,
       itemCount,
       setItemQuantity,
       increment,
       decrement,
       removeItem,
       clearCart,
+      setPromoCode,
       isCartOpen,
       openCart,
       closeCart,
     }),
-    [cart, itemCount, isCartOpen],
+    [cart, promoCode, itemCount, isCartOpen],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

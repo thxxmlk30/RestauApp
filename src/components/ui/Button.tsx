@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes } from 'react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'icon';
   loading?: boolean;
 }
 
@@ -29,6 +29,7 @@ export function Button({
     sm: 'px-3 py-1.5 text-sm',
     md: 'px-5 py-2.5 text-sm',
     lg: 'px-7 py-3.5 text-base',
+    icon: 'h-11 w-11 p-0 text-sm',
   };
 
   return (

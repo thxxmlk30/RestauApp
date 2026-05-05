@@ -1,21 +1,25 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import type { User } from './types';
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/auth/loginPage';
-import RegisterPage from './pages/auth/RegisterPage';
-import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
-import DashboardLayout from './pages/dashboard/DashboardLayout';
-import DashboardOverviewPage from './pages/dashboard/DashboardOverviewPage';
-import DashboardOrdersPage from './pages/dashboard/DashboardOrdersPage';
-import DashboardStatsPage from './pages/dashboard/DashboardStatsPage';
-import DashboardMenuPage from './pages/dashboard/DashboardMenuPage';
-import MyOrdersPage from './pages/orders/MyOrdersPage';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import CartModal from './components/ordering/Cartmodal';
 import ScrollToHash from './components/layout/ScrollToHash';
+import { useAuth } from './context/AuthContext';
+import type { UserRole } from './types';
+import LandingPage from './pages/LandingPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import LoginPage from './pages/auth/loginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import DashboardDispatchPage from './pages/dashboard/DashboardDispatchPage';
+import DashboardLayout from './pages/dashboard/DashboardLayout';
+import DashboardMapPage from './pages/dashboard/DashboardMapPage';
+import DashboardMenuPage from './pages/dashboard/DashboardMenuPage';
+import DashboardOrdersPage from './pages/dashboard/DashboardOrdersPage';
+import DashboardOverviewPage from './pages/dashboard/DashboardOverviewPage';
+import DashboardReportsPage from './pages/dashboard/DashboardReportsPage';
+import DashboardStaffPage from './pages/dashboard/DashboardStaffPage';
+import DashboardStatsPage from './pages/dashboard/DashboardStatsPage';
+import DashboardStockPage from './pages/dashboard/DashboardStockPage';
+import MyOrdersPage from './pages/orders/MyOrdersPage';
 
-// Composant qui protège les routes privées
-function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: User['role'][] }) {
+function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: UserRole[] }) {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
 
@@ -25,14 +29,15 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
   }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={user.role === 'customer' ? '/mes-commandes' : '/dashboard'} replace />;
   }
 
   return <>{children}</>;
 }
 
-export default function App() {
+const staffRoles: UserRole[] = ['admin', 'waiter', 'chef', 'delivery'];
 
+export default function App() {
   return (
     <>
       <ScrollToHash />
@@ -45,7 +50,7 @@ export default function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute allowedRoles={staffRoles}>
               <DashboardLayout />
             </ProtectedRoute>
           }
@@ -54,6 +59,11 @@ export default function App() {
           <Route path="stats" element={<DashboardStatsPage />} />
           <Route path="orders" element={<DashboardOrdersPage />} />
           <Route path="menu" element={<DashboardMenuPage />} />
+          <Route path="stock" element={<DashboardStockPage />} />
+          <Route path="staff" element={<DashboardStaffPage />} />
+          <Route path="map" element={<DashboardMapPage />} />
+          <Route path="reports" element={<DashboardReportsPage />} />
+          <Route path="zones" element={<DashboardDispatchPage />} />
         </Route>
 
         <Route
@@ -68,11 +78,10 @@ export default function App() {
         <Route path="/connexion" element={<Navigate to="/login" replace />} />
         <Route path="/inscription" element={<Navigate to="/register" replace />} />
         <Route path="/mdp-oublie" element={<Navigate to="/forgot-password" replace />} />
-
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       <CartModal />
     </>
-  )
+  );
 }
