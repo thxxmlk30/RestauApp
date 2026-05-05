@@ -186,9 +186,9 @@ export default function DashboardLayout() {
     () => [
       { value: 'pending', label: 'En attente' },
       { value: 'preparing', label: 'En cuisine' },
-      { value: 'ready', label: 'Prête' },
-      { value: 'delivered', label: 'Livrée' },
-      { value: 'cancelled', label: 'Annulée' },
+      { value: 'ready', label: 'Prete' },
+      { value: 'delivered', label: 'Livree' },
+      { value: 'cancelled', label: 'Annulee' },
     ],
     [],
   );
@@ -243,9 +243,9 @@ export default function DashboardLayout() {
   return (
     <div className="min-h-screen bg-[#fcfbfa]">
       <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="h-9 w-9 p-0 lg:hidden" onClick={toggleSidebar}>
+            <Button variant="outline" size="sm" className="h-10 w-10 rounded-2xl p-0 lg:hidden" onClick={toggleSidebar}>
               <Menu size={18} />
             </Button>
             <div className="soft-3d flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-500 text-white">
@@ -253,35 +253,35 @@ export default function DashboardLayout() {
             </div>
             <div>
               <div className="font-display text-base font-bold text-secondary-900">Linguere Ops</div>
-              <div className="text-xs text-gray-500">{user ? formatRole(user.role) : 'Équipe'}</div>
+              <div className="text-xs text-gray-500">{user ? formatRole(user.role) : 'Equipe'}</div>
             </div>
           </div>
 
-          <div className="hidden flex-1 items-center justify-center lg:flex">
-            <Input placeholder="Recherche rapide: commandes, stocks, personnel..." className="max-w-md" />
+          <div className="hidden flex-1 items-center justify-center xl:flex">
+            <Input placeholder="Recherche rapide: commandes, stocks, personnel..." className="max-w-md rounded-2xl" />
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden rounded-2xl border border-gray-100 bg-white px-4 py-2 text-right shadow-sm sm:block">
-              <div className="text-xs text-gray-500">Connecté</div>
+            <div className="hidden rounded-2xl border border-gray-100 bg-white px-4 py-2 text-right shadow-sm md:block">
+              <div className="text-xs text-gray-500">Connecte</div>
               <div className="text-sm font-semibold text-secondary-900">{user?.name}</div>
             </div>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
+            <Button variant="outline" size="sm" className="rounded-2xl" onClick={handleLogout}>
               <LogOut size={14} className="mr-1.5" />
-              Déconnexion
+              Deconnexion
             </Button>
           </div>
         </div>
       </header>
 
-      {isMobileSidebarOpen && (
+      {isMobileSidebarOpen ? (
         <div className="fixed inset-0 z-20 bg-black/40 backdrop-blur-sm lg:hidden" onClick={() => setIsMobileSidebarOpen(false)} />
-      )}
+      ) : null}
 
-      <main className="mx-auto max-w-7xl py-8">
-        <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
           <Sidebar isOpen={isMobileSidebarOpen} onClose={() => setIsMobileSidebarOpen(false)} />
-          <div className="px-4 sm:px-6 lg:px-8">
+          <div className="min-w-0">
             <Outlet context={outletContext} />
           </div>
         </div>

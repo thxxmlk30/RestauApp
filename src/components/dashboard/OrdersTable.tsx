@@ -29,7 +29,7 @@ function AssignmentSelect({
 
   return (
     <select
-      className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs"
+      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs"
       value={value ?? ''}
       onChange={(event) => onChange(event.target.value)}
     >
@@ -55,7 +55,7 @@ export default function OrdersTable({
 }: OrdersTableProps) {
   return (
     <div>
-      <div className="hidden overflow-x-auto lg:block">
+      <div className="hidden overflow-x-auto xl:block">
         <table className="w-full min-w-[1080px]">
           <thead>
             <tr className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
@@ -108,25 +108,25 @@ export default function OrdersTable({
                       <div className="text-xs text-gray-500">
                         Chef: <span className="font-medium text-secondary-900">{order.assignedChefName || 'Non assigne'}</span>
                       </div>
-                      {order.serviceType === 'delivery' && (
+                      {order.serviceType === 'delivery' ? (
                         <div className="text-xs text-gray-500">
                           Livreur: <span className="font-medium text-secondary-900">{order.courierName || 'Non assigne'}</span>
                         </div>
-                      )}
+                      ) : null}
                       <AssignmentSelect
                         value={order.assignedChefId}
                         placeholder="Assigner chef"
                         options={chefs}
                         onChange={onAssignChef ? (staffId) => onAssignChef(order.id, staffId) : undefined}
                       />
-                      {order.serviceType === 'delivery' && (
+                      {order.serviceType === 'delivery' ? (
                         <AssignmentSelect
                           value={order.courierId}
                           placeholder="Assigner livreur"
                           options={couriers}
                           onChange={onAssignCourier ? (staffId) => onAssignCourier(order.id, staffId) : undefined}
                         />
-                      )}
+                      ) : null}
                     </div>
                   </td>
                   <td className="px-5 py-4 align-top">
@@ -136,9 +136,9 @@ export default function OrdersTable({
                   <td className="px-5 py-4 align-top text-right text-sm font-bold text-secondary-900">{formatCurrency(order.totalAmount)}</td>
                   <td className="px-5 py-4 align-top">
                     <div className="flex items-center gap-2">
-                      {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                      {order.status !== 'delivered' && order.status !== 'cancelled' ? (
                         <select
-                          className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs"
+                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs"
                           value={order.status}
                           onChange={(event) => onUpdateStatus(order.id, event.target.value as OrderStatus)}
                         >
@@ -148,11 +148,11 @@ export default function OrdersTable({
                             </option>
                           ))}
                         </select>
-                      )}
-                      {onDeleteOrder && (
+                      ) : null}
+                      {onDeleteOrder ? (
                         <button
                           type="button"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                           onClick={() => {
                             if (window.confirm(`Supprimer la commande ${order.id} ?`)) onDeleteOrder(order.id);
                           }}
@@ -161,7 +161,7 @@ export default function OrdersTable({
                         >
                           <Trash2 size={16} />
                         </button>
-                      )}
+                      ) : null}
                     </div>
                   </td>
                 </tr>
@@ -171,7 +171,7 @@ export default function OrdersTable({
         </table>
       </div>
 
-      <div className="space-y-3 p-4 lg:hidden">
+      <div className="space-y-3 p-4 xl:hidden">
         {orders.map((order) => {
           const productsFull = order.items.map((item) => `${item.quantity}x ${item.name}`).join(', ');
 
@@ -201,12 +201,12 @@ export default function OrdersTable({
                 <div className="rounded-2xl bg-gray-50 p-3 text-sm">
                   <div className="text-xs uppercase tracking-[0.16em] text-gray-400">Equipe</div>
                   <div className="mt-1 text-secondary-900">Chef: {order.assignedChefName || 'Non assigne'}</div>
-                  {order.serviceType === 'delivery' && <div className="mt-1 text-secondary-900">Livreur: {order.courierName || 'Non assigne'}</div>}
+                  {order.serviceType === 'delivery' ? <div className="mt-1 text-secondary-900">Livreur: {order.courierName || 'Non assigne'}</div> : null}
                 </div>
                 <div className="rounded-2xl bg-gray-50 p-3 text-sm">
                   <div className="text-xs uppercase tracking-[0.16em] text-gray-400">Montant</div>
                   <div className="mt-1 font-semibold text-secondary-900">{formatCurrency(order.totalAmount)}</div>
-                  {order.serviceType === 'delivery' && <div className="mt-1 text-gray-500">Livraison: {formatCurrency(order.deliveryFee ?? 0)}</div>}
+                  {order.serviceType === 'delivery' ? <div className="mt-1 text-gray-500">Livraison: {formatCurrency(order.deliveryFee ?? 0)}</div> : null}
                 </div>
               </div>
 
@@ -217,20 +217,20 @@ export default function OrdersTable({
                   options={chefs}
                   onChange={onAssignChef ? (staffId) => onAssignChef(order.id, staffId) : undefined}
                 />
-                {order.serviceType === 'delivery' && (
+                {order.serviceType === 'delivery' ? (
                   <AssignmentSelect
                     value={order.courierId}
                     placeholder="Assigner livreur"
                     options={couriers}
                     onChange={onAssignCourier ? (staffId) => onAssignCourier(order.id, staffId) : undefined}
                   />
-                )}
+                ) : null}
               </div>
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                {order.status !== 'delivered' && order.status !== 'cancelled' ? (
                   <select
-                    className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm"
                     value={order.status}
                     onChange={(event) => onUpdateStatus(order.id, event.target.value as OrderStatus)}
                   >
@@ -240,11 +240,11 @@ export default function OrdersTable({
                       </option>
                     ))}
                   </select>
-                )}
-                {onDeleteOrder && (
+                ) : null}
+                {onDeleteOrder ? (
                   <button
                     type="button"
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                     onClick={() => {
                       if (window.confirm(`Supprimer la commande ${order.id} ?`)) onDeleteOrder(order.id);
                     }}
@@ -253,14 +253,14 @@ export default function OrdersTable({
                   >
                     <Trash2 size={16} />
                   </button>
-                )}
+                ) : null}
               </div>
             </article>
           );
         })}
       </div>
 
-      {orders.length === 0 && <div className="py-12 text-center text-gray-400">Aucune commande</div>}
+      {orders.length === 0 ? <div className="py-12 text-center text-gray-400">Aucune commande</div> : null}
     </div>
   );
 }

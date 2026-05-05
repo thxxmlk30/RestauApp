@@ -5,7 +5,6 @@ import type { User, UserRole } from '../types';
 import { loadStaff } from '../utils/storage';
 
 type RegisterData = { name: string; email: string; password: string };
-
 type StoredUser = User & { password: string };
 
 interface AuthContextType {
@@ -98,11 +97,8 @@ function loadSessionUser(): User | null {
 function saveSessionUser(nextUser: User | null) {
   if (!isBrowserStorageAvailable()) return;
   try {
-    if (nextUser) {
-      window.localStorage.setItem(SESSION_KEY, JSON.stringify(nextUser));
-    } else {
-      window.localStorage.removeItem(SESSION_KEY);
-    }
+    if (nextUser) window.localStorage.setItem(SESSION_KEY, JSON.stringify(nextUser));
+    else window.localStorage.removeItem(SESSION_KEY);
   } catch {
     // ignore write errors
   }
@@ -151,16 +147,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const email = normalizeEmail(data.email);
     const password = data.password;
 
-    if (!name || name.length < 2) return { ok: false, error: 'Le nom doit contenir au moins 2 caractères.' };
+    if (!name || name.length < 2) return { ok: false, error: 'Le nom doit contenir au moins 2 caracteres.' };
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'Email invalide.' };
-    if (!password || password.length < 6) return { ok: false, error: 'Le mot de passe doit contenir au moins 6 caractères.' };
+    if (!password || password.length < 6) return { ok: false, error: 'Le mot de passe doit contenir au moins 6 caracteres.' };
 
     const staffExists = loadStaff(mockStaff).some((member) => normalizeEmail(member.email) === email);
-    if (staffExists) return { ok: false, error: 'Cet email est réservé au personnel.' };
+    if (staffExists) return { ok: false, error: 'Cet email est reserve au personnel.' };
 
     const existingUsers = loadStoredUsers();
     if (existingUsers.some((item) => normalizeEmail(item.email) === email)) {
-      return { ok: false, error: 'Cet email est déjà utilisé.' };
+      return { ok: false, error: 'Cet email est deja utilise.' };
     }
 
     const nextUser: User = {

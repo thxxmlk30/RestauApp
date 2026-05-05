@@ -1,17 +1,5 @@
 import { motion } from 'framer-motion';
-import {
-  BarChart3,
-  ClipboardList,
-  FileText,
-  Home,
-  LayoutDashboard,
-  MapPin,
-  PackageCheck,
-  Route,
-  Users,
-  UtensilsCrossed,
-  X,
-} from 'lucide-react';
+import { BarChart3, ClipboardList, FileText, Home, LayoutDashboard, MapPin, PackageCheck, Route, Users, UtensilsCrossed, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/Button';
@@ -87,7 +75,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <motion.aside
-      className={`fixed inset-y-0 left-0 z-30 flex w-72 flex-col gap-5 border-r border-gray-100 bg-white/95 p-4 shadow-2xl backdrop-blur-xl transition-transform lg:static lg:w-auto lg:translate-x-0 lg:rounded-[32px] lg:border lg:shadow-lg ${
+      className={`fixed bottom-0 left-0 top-16 z-30 flex w-[19rem] flex-col gap-5 overflow-y-auto border-r border-gray-100 bg-white/95 p-4 shadow-2xl backdrop-blur-xl transition-transform lg:static lg:top-auto lg:w-auto lg:translate-x-0 lg:overflow-visible lg:rounded-[32px] lg:border lg:shadow-lg ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
       initial={false}
@@ -97,7 +85,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <h2 className="font-display text-xl font-bold text-secondary-900">Linguere</h2>
           <p className="text-xs text-gray-500">Dashboard operations</p>
         </div>
-        <Button variant="outline" size="sm" onClick={onClose} className="h-9 w-9 p-0 lg:hidden">
+        <Button variant="outline" size="sm" onClick={onClose} className="h-10 w-10 rounded-2xl p-0 lg:hidden">
           <X size={18} />
         </Button>
       </div>
