@@ -9,11 +9,20 @@ import type {
   Order,
   OrderLocation,
   OrderStatus,
-  PromoCode,
   ServiceType,
   Staff,
+  StockAuditLine,
+  StockAuditRecord,
+  StockBotChannel,
+  StockBotSettings,
   UserRole,
 } from '../types';
+
+export const defaultStockBotSettings: StockBotSettings = {
+  email: 'appro-bot@linguere.sn',
+  whatsapp: '221771112233',
+  preferredChannel: 'email',
+};
 
 export function formatCurrency(value: number) {
   const amount = Math.round(value);
@@ -75,52 +84,12 @@ export function getServiceTone(type: ServiceType) {
     : 'bg-secondary-50 text-secondary-700 border-secondary-200';
 }
 
-export const promoCodes: PromoCode[] = [
-  { code: 'LINGUERE10', discount: 10, expiresAt: '2027-12-31' },
-  { code: 'WELCOME20', discount: 20, expiresAt: '2027-12-31' },
-  { code: 'CHEF5', discount: 5, expiresAt: '2027-06-30' },
-];
-
-export const isValidPromo = (code: string): number => {
-  const promo = promoCodes.find((item) => item.code === code.trim().toUpperCase());
-  if (!promo) return 0;
-  if (new Date(promo.expiresAt).getTime() < Date.now()) return 0;
-  return promo.discount;
-};
-
-interface CartLineTotal {
-  subtotal: number;
-  discountAmount: number;
-  total: number;
-  discountPercent: number | null;
+export function calculateCartSubtotal(cartLines: Array<{ lineTotal: number }>) {
+  return cartLines.reduce((sum, line) => sum + line.lineTotal, 0);
 }
 
-export function calculateCartTotalWithPromo(cartLines: Array<{ lineTotal: number }>, promoCode?: string): CartLineTotal {
-  const subtotal = cartLines.reduce((sum, line) => sum + line.lineTotal, 0);
-  if (!promoCode) {
-    return { subtotal, discountAmount: 0, total: subtotal, discountPercent: null };
-  }
-
-  const discountPercent = isValidPromo(promoCode);
-  if (discountPercent === 0) {
-    return { subtotal, discountAmount: 0, total: subtotal, discountPercent: null };
-  }
-
-  const discountAmount = Math.round((subtotal * discountPercent) / 100);
-  return {
-    subtotal,
-    discountAmount,
-    total: subtotal - discountAmount,
-    discountPercent,
-  };
-}
-
-export function applyDiscount(amount: number, discountPercent: number): number {
-  return Math.round(amount - (amount * discountPercent) / 100);
-}
-
-export function calculateOrderAmount(subtotal: number, discountAmount: number, deliveryFee = 0) {
-  return Math.max(0, subtotal - discountAmount) + deliveryFee;
+export function calculateOrderAmount(subtotal: number, deliveryFee = 0) {
+  return Math.max(0, subtotal) + deliveryFee;
 }
 
 export function buildDeliveryAddressLabel(zone: DeliveryZone, streetLine?: string, landmark?: string) {
@@ -129,15 +98,129 @@ export function buildDeliveryAddressLabel(zone: DeliveryZone, streetLine?: strin
 }
 
 export function formatDeliveryArea(order: Order) {
-  if (order.deliverySector && order.deliveryCommune) {
-    return `${order.deliverySector}, ${order.deliveryCommune}`;
-  }
-
-  if (order.deliveryCommune) {
-    return order.deliveryCommune;
-  }
-
+  if (order.deliverySector && order.deliveryCommune) return `${order.deliverySector}, ${order.deliveryCommune}`;
+  if (order.deliveryCommune) return order.deliveryCommune;
   return order.deliveryAddress ?? 'Adresse a confirmer';
+}
+
+export function isIngredientCritical(ingredient: Ingredient) {
+  return ingredient.currentStock <= ingredient.criticalStock;
+}
+
+export function isIngredientBelowReorder(ingredient: Ingredient) {
+  return ingredient.currentStock <= ingredient.reorderThreshold;
+}
+
+export function getIngredientStatusLabel(ingredient: Ingredient) {
+  if (isIngredientCritical(ingredient)) return 'Critique';
+  if (ingredient.currentStock <= ingredient.minStock) return 'Sous minimum';
+  if (isIngredientBelowReorder(ingredient)) return 'Reappro';
+  return 'OK';
+}
+
+export function buildStockAuditLines(previousIngredients: Ingredient[], nextIngredients: Ingredient[]): StockAuditLine[] {
+  const previousById = new Map(previousIngredients.map((item) => [item.id, item]));
+  return nextIngredients.map((ingredient) => {
+    const previous = previousById.get(ingredient.id);
+    return {
+      ingredientId: ingredient.id,
+      ingredientName: ingredient.name,
+      previousStock: previous?.currentStock ?? ingredient.currentStock,
+      countedStock: ingredient.currentStock,
+      unit: ingredient.unit,
+      critical: isIngredientCritical(ingredient),
+    };
+  });
+}
+
+export function buildStockAuditRecord(lines: StockAuditLine[], channel: StockBotChannel): StockAuditRecord {
+  const criticalItems = lines.filter((line) => line.critical).length;
+  return {
+    id: `audit-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    channel,
+    totalItems: lines.length,
+    criticalItems,
+    lines,
+  };
+}
+
+export function buildCriticalReorderMessage(ingredients: Ingredient[]) {
+  const criticalItems = ingredients.filter(isIngredientCritical);
+  if (criticalItems.length === 0) return '';
+
+  const header = [
+    'Commande immediate de reapprovisionnement',
+    `Date: ${new Date().toLocaleDateString('fr-FR')}`,
+    '',
+    'Produits critiques a commander:',
+  ];
+
+  const lines = criticalItems.map((ingredient) => {
+    const suggestedQty = Math.max(ingredient.reorderThreshold * 2 - ingredient.currentStock, ingredient.reorderThreshold);
+    return `- ${ingredient.name}: restant ${formatNumber(ingredient.currentStock)} ${ingredient.unit}, critique ${formatNumber(ingredient.criticalStock)} ${ingredient.unit}, commande suggeree ${formatNumber(suggestedQty)} ${ingredient.unit}, fournisseur ${ingredient.supplier || 'non renseigne'}`;
+  });
+
+  return [...header, ...lines, '', 'Merci de confirmer la commande fournisseur au plus vite.'].join('\n');
+}
+
+export function buildStockBotLaunchLink(channel: StockBotChannel, settings: StockBotSettings, ingredients: Ingredient[]) {
+  const message = buildCriticalReorderMessage(ingredients);
+  if (!message) return '';
+
+  if (channel === 'email') {
+    const subject = encodeURIComponent(`Alerte stock critique - ${new Date().toLocaleDateString('fr-FR')}`);
+    return `mailto:${encodeURIComponent(settings.email)}?subject=${subject}&body=${encodeURIComponent(message)}`;
+  }
+
+  const cleanedPhone = settings.whatsapp.replace(/[^\d]/g, '');
+  return `https://wa.me/${cleanedPhone}?text=${encodeURIComponent(message)}`;
+}
+
+function toLocalDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function isSameLocalDay(left: string | Date, right: string | Date = new Date()) {
+  return toLocalDateKey(new Date(left)) === toLocalDateKey(new Date(right));
+}
+
+export function getCourierDeliveryCountForDay(orders: Order[], courierId: string, date: string | Date = new Date()) {
+  return orders.filter(
+    (order) =>
+      order.serviceType === 'delivery' &&
+      order.courierId === courierId &&
+      order.status !== 'cancelled' &&
+      isSameLocalDay(order.createdAt, date),
+  ).length;
+}
+
+function getCourierActiveLoad(orders: Order[], courierId: string) {
+  return orders.filter(
+    (order) =>
+      order.serviceType === 'delivery' &&
+      order.courierId === courierId &&
+      order.status !== 'delivered' &&
+      order.status !== 'cancelled',
+  ).length;
+}
+
+export function getBestCourierForNextOrder(staff: Staff[], orders: Order[]) {
+  const activeCouriers = staff.filter((member) => member.role === 'delivery' && member.status === 'active');
+  if (activeCouriers.length === 0) return undefined;
+
+  return [...activeCouriers].sort((left, right) => {
+    const todayDiff = getCourierDeliveryCountForDay(orders, left.id) - getCourierDeliveryCountForDay(orders, right.id);
+    if (todayDiff !== 0) return todayDiff;
+
+    const activeDiff = getCourierActiveLoad(orders, left.id) - getCourierActiveLoad(orders, right.id);
+    if (activeDiff !== 0) return activeDiff;
+
+    return left.name.localeCompare(right.name, 'fr');
+  })[0];
 }
 
 export function clamp(value: number, min = 0, max = 1) {
@@ -151,9 +234,9 @@ export function getOrderLiveProgress(order: Order) {
   }
 
   const statusFloor = {
-    pending: 0.15,
-    preparing: 0.45,
-    ready: 0.72,
+    pending: 0.18,
+    preparing: 0.48,
+    ready: 0.76,
     delivered: 1,
     cancelled: 0,
   }[order.status];
@@ -192,16 +275,16 @@ export function getOrderEtaLabel(order: Order) {
 export function getTrackingStages(order: Order) {
   const progress = getOrderLiveProgress(order);
   const stages = [
-    { key: 'pending', label: 'Validation', threshold: 0.15 },
-    { key: 'preparing', label: 'Preparation', threshold: 0.45 },
-    { key: 'ready', label: 'Depart coursier', threshold: 0.72 },
+    { key: 'pending', label: 'Validation', threshold: 0.18 },
+    { key: 'preparing', label: 'Preparation', threshold: 0.48 },
+    { key: 'ready', label: 'Depart livreur', threshold: 0.76 },
     { key: 'delivered', label: 'Livraison', threshold: 1 },
   ];
 
   return stages.map((stage) => ({
     ...stage,
     done: progress >= stage.threshold,
-    active: progress < stage.threshold && progress >= stage.threshold - 0.2,
+    active: progress < stage.threshold && progress >= stage.threshold - 0.25,
   }));
 }
 

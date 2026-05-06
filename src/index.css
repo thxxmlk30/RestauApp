@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -21,6 +23,65 @@
 }
 
 @layer components {
+  .font-auth {
+    font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .auth-shell {
+    background: #111827;
+  }
+
+  .auth-input {
+    @apply w-full rounded-2xl border border-[#e7ddd0] bg-[#fcfaf7] px-4 py-3.5 text-sm text-secondary-900 placeholder:text-[#9a8f83] transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500;
+  }
+
+  .auth-input-wrap {
+    @apply flex items-center gap-3 rounded-2xl border border-[#e7ddd0] bg-[#fcfaf7] px-4 transition;
+  }
+
+  .auth-input-wrap:focus-within {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px rgba(244, 139, 74, 0.38);
+  }
+
+  .auth-input-inner {
+    @apply min-w-0 flex-1 bg-transparent py-3.5 text-sm text-secondary-900 placeholder:text-[#9a8f83] focus:outline-none;
+  }
+
+  .auth-icon-badge {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#fff1e6] text-primary-600;
+  }
+
+  .auth-divider {
+    @apply relative my-6 text-center text-[11px] font-semibold uppercase tracking-[0.32em] text-[#9a8f83];
+  }
+
+  .auth-divider::before,
+  .auth-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: calc(50% - 28px);
+    height: 1px;
+    background: #eadfd3;
+  }
+
+  .auth-divider::before {
+    left: 0;
+  }
+
+  .auth-divider::after {
+    right: 0;
+  }
+
+  .auth-social-button {
+    @apply inline-flex items-center justify-center gap-3 rounded-2xl border border-[#e7ddd0] bg-white px-4 py-3.5 text-sm font-medium text-secondary-900 transition hover:border-[#dccfbe] hover:bg-[#fdf8f2];
+  }
+
+  .auth-appear {
+    animation: authRise 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
   .panel-3d {
     box-shadow:
       0 20px 42px rgba(28, 25, 23, 0.08),
@@ -32,5 +93,17 @@
     box-shadow:
       0 10px 20px rgba(244, 139, 74, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+}
+
+@keyframes authRise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

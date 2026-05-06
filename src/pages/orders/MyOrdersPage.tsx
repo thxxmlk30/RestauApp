@@ -77,24 +77,24 @@ export default function MyOrdersPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="font-display text-3xl font-bold text-secondary-900">Mes commandes</h1>
-              {user && <p className="mt-1 text-sm text-gray-500">Connecte en tant que {user.name}</p>}
+              {user ? <p className="mt-1 text-sm text-gray-500">Connecte en tant que {user.name}</p> : null}
             </div>
             <Link to="/#menu" className="text-sm font-medium text-primary-600 hover:underline">
               Retour au menu
             </Link>
           </div>
 
-          {activeDelivery && (
+          {activeDelivery ? (
             <section className="space-y-4">
               <div>
-                <h2 className="font-display text-2xl font-bold text-secondary-900">Suivi en temps reel</h2>
-                <p className="mt-1 text-sm text-gray-500">Votre course en cours est suivie comme une app de VTC, avec progression et ETA.</p>
+                <h2 className="font-display text-2xl font-bold text-secondary-900">Commande en cours</h2>
+                <p className="mt-1 text-sm text-gray-500">Suivi simplifie: statut, ETA, livreur et destination.</p>
               </div>
               <DeliveryLiveMap order={activeDelivery} />
             </section>
-          )}
+          ) : null}
 
-          {favoriteItems.length > 0 && (
+          {favoriteItems.length > 0 ? (
             <section className="panel-3d rounded-[30px] border border-gray-100 bg-white p-6">
               <div className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-primary-500" />
@@ -117,7 +117,7 @@ export default function MyOrdersPage() {
                 ))}
               </div>
             </section>
-          )}
+          ) : null}
 
           {myOrders.length === 0 ? (
             <div className="rounded-[30px] border border-gray-100 bg-white p-8 text-center">
@@ -142,20 +142,18 @@ export default function MyOrdersPage() {
                         <p className="text-sm text-gray-500">Reference</p>
                         <p className="font-mono font-semibold text-secondary-900">{order.id}</p>
                         <p className="mt-2 text-sm text-gray-500">
-                          {formatServiceType(order.serviceType)} · {formatTimeAgo(order.createdAt)}
+                          {formatServiceType(order.serviceType)} - {formatTimeAgo(order.createdAt)}
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${meta.className}`}>{meta.label}</span>
-                        {order.serviceType === 'dine_in' ? (
-                          <span className="text-xs text-gray-500">Table {order.tableNumber}</span>
-                        ) : (
-                          <span className="text-xs text-gray-500">{formatDeliveryArea(order)}</span>
-                        )}
+                        <span className="text-xs text-gray-500">
+                          {order.serviceType === 'dine_in' ? `Table ${order.tableNumber}` : formatDeliveryArea(order)}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="mt-4 grid gap-5 xl:grid-cols-[1fr_360px]">
+                    <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_320px]">
                       <div className="rounded-[24px] border border-gray-100">
                         {order.items.map((item) => (
                           <div key={`${order.id}-${item.menuItemId}`} className="flex items-start justify-between gap-4 border-b border-gray-100 px-4 py-3 last:border-b-0">
@@ -173,12 +171,6 @@ export default function MyOrdersPage() {
                             <span>Sous-total</span>
                             <span>{formatCurrency(order.subtotalAmount ?? order.totalAmount)}</span>
                           </div>
-                          {order.discountAmount ? (
-                            <div className="flex items-center justify-between text-emerald-700">
-                              <span>Remise</span>
-                              <span>-{formatCurrency(order.discountAmount)}</span>
-                            </div>
-                          ) : null}
                           {order.serviceType === 'delivery' ? (
                             <div className="flex items-center justify-between text-gray-600">
                               <span>Livraison</span>
@@ -192,22 +184,18 @@ export default function MyOrdersPage() {
                         </div>
                       </div>
 
-                      <div className="space-y-4">
-                        {order.serviceType === 'delivery' && order.location ? (
-                          <DeliveryLiveMap order={order} compact />
-                        ) : null}
-
+                      <div className="space-y-3">
                         <div className="rounded-[24px] border border-gray-100 bg-gray-50 p-4 text-sm text-gray-600">
                           <div>Chef: {order.assignedChefName || 'Affectation en cours'}</div>
-                          {order.serviceType === 'delivery' && <div className="mt-1">Livreur: {order.courierName || 'Affectation en cours'}</div>}
-                          {order.serviceType === 'delivery' && <div className="mt-1">Adresse: {order.deliveryAddress}</div>}
-                          {order.rating && (
-                            <div className="mt-2 flex items-center gap-1 text-amber-500">
+                          {order.serviceType === 'delivery' ? <div className="mt-2">Livreur: {order.courierName || 'Affectation en cours'}</div> : null}
+                          {order.serviceType === 'delivery' ? <div className="mt-2">Adresse: {order.deliveryAddress}</div> : null}
+                          {order.rating ? (
+                            <div className="mt-3 flex items-center gap-1 text-amber-500">
                               {Array.from({ length: order.rating }).map((_, index) => (
                                 <Star key={index} size={14} className="fill-current" />
                               ))}
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     </div>
@@ -217,23 +205,20 @@ export default function MyOrdersPage() {
                         <RotateCcw size={14} className="mr-2" />
                         Recommander
                       </Button>
-                      {order.status === 'pending' && (
+                      {order.status === 'pending' ? (
                         <Button type="button" variant="danger" size="sm" onClick={() => cancelOrder(order.id)}>
                           Annuler
                         </Button>
-                      )}
+                      ) : null}
                     </div>
 
-                    {canRate && (
+                    {canRate ? (
                       <div className="mt-5 rounded-[24px] border border-primary-100 bg-primary-50 p-4">
                         <div className="text-sm font-medium text-secondary-900">Evaluer cette commande</div>
                         <div className="mt-3 flex items-center gap-2">
                           {[1, 2, 3, 4, 5].map((value) => (
                             <button key={value} type="button" onClick={() => setRatingDrafts((prev) => ({ ...prev, [order.id]: value }))}>
-                              <Star
-                                size={18}
-                                className={`${(ratingDrafts[order.id] ?? 0) >= value ? 'fill-current text-amber-500' : 'text-gray-300'}`}
-                              />
+                              <Star size={18} className={`${(ratingDrafts[order.id] ?? 0) >= value ? 'fill-current text-amber-500' : 'text-gray-300'}`} />
                             </button>
                           ))}
                           <Button type="button" size="sm" onClick={() => rateOrder(order.id)} disabled={!ratingDrafts[order.id]}>
@@ -241,7 +226,7 @@ export default function MyOrdersPage() {
                           </Button>
                         </div>
                       </div>
-                    )}
+                    ) : null}
                   </article>
                 );
               })}

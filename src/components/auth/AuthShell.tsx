@@ -1,96 +1,102 @@
 import type { ReactNode } from 'react';
-import { ChefHat } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import authImage from '../../assets/login_register.webp';
 
 interface AuthShellProps {
   title: string;
   description: string;
-  asideLabel: string;
-  asideTitle: string;
-  asideDescription: string;
+  eyebrow?: string;
+  headerIcon?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
 }
 
+const platformHighlights = [
+  'Gestion commandes temps reel',
+  'Suivi livraison sur carte',
+  'IA Chef - recommandations intelligentes',
+  'Rapports automatises PDF/Excel',
+  'Gestion stock avec alertes',
+];
+
 export default function AuthShell({
   title,
   description,
-  asideLabel,
-  asideTitle,
-  asideDescription,
+  eyebrow,
+  headerIcon,
   children,
   footer,
 }: AuthShellProps) {
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#1c1917_0%,#292524_38%,#fcfbfa_38%,#fcfbfa_100%)]">
-      <div className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
-        <aside className="relative hidden overflow-hidden lg:block">
-          <img src={authImage} alt="Linguere" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(28,25,23,0.92),rgba(28,25,23,0.62),rgba(232,89,60,0.24))]" />
-          <div className="relative flex h-full flex-col justify-between p-10 xl:p-14">
-            <Link to="/" className="inline-flex items-center gap-3 text-white" aria-label="Retour a l accueil">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-500 shadow-lg">
-                <ChefHat size={22} className="text-white" />
+    <div className="auth-shell min-h-screen">
+      <div className="grid min-h-screen lg:grid-cols-[1.08fr_0.92fr]">
+        <aside className="relative overflow-hidden bg-[linear-gradient(180deg,#111827_0%,#172033_100%)] px-5 py-6 sm:px-8 sm:py-8 lg:min-h-screen lg:px-10 lg:py-10 xl:px-14 xl:py-12">
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(244,139,74,0.24),transparent_26%),radial-gradient(circle_at_78%_18%,rgba(74,222,128,0.14),transparent_18%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.06),transparent_24%)]"
+          />
+          <div className="relative z-10 flex h-full min-h-[46vh] flex-col gap-10 lg:min-h-0">
+            <Link to="/" className="inline-flex w-fit items-center gap-3 text-white" aria-label="Retour au site">
+              <div className="font-auth flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-500 text-lg font-extrabold text-white shadow-[0_18px_38px_rgba(244,139,74,0.36)]">
+                L
               </div>
               <div>
-                <div className="font-display text-3xl font-bold">Linguere</div>
-                <div className="text-xs uppercase tracking-[0.28em] text-white/65">restaurant operations</div>
+                <div className="font-auth text-lg font-bold text-white">Linguere</div>
+                <div className="text-[11px] font-medium text-primary-400">&larr; Retour au site</div>
               </div>
             </Link>
 
-            <div className="max-w-xl">
-              <div className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
-                {asideLabel}
+            <div className="relative z-10 flex flex-1 items-center">
+              <div className="max-w-[420px]">
+                <h2 className="font-auth text-[2.35rem] font-extrabold leading-[1.08] text-white sm:text-[2.85rem] xl:text-[3.2rem]">
+                  Bienvenue
+                  <br />
+                  dans l&apos;ere de la
+                  <br />
+                  <span className="text-primary-500">gestion intelligente</span>
+                </h2>
+                <p className="mt-5 max-w-[320px] text-sm leading-7 text-[#9ca3af]">
+                  Dashboard, commandes, stock, personnel et IA - tout en un pour gerer votre restaurant comme un pro.
+                </p>
+                <div className="mt-8 space-y-3">
+                  {platformHighlights.map((highlight) => (
+                    <div key={highlight} className="flex items-center gap-3 text-sm text-[#d1d5db]">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/16 text-emerald-400">
+                        <Check size={14} />
+                      </span>
+                      <span>{highlight}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <h2 className="mt-6 font-display text-5xl font-bold leading-tight text-white xl:text-6xl">{asideTitle}</h2>
-              <p className="mt-5 max-w-lg text-base leading-7 text-white/78 xl:text-lg">{asideDescription}</p>
             </div>
 
-            <div className="grid max-w-xl gap-4 xl:grid-cols-3">
-              <div className="rounded-[24px] border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
-                <div className="text-xs uppercase tracking-[0.18em] text-white/55">Client</div>
-                <div className="mt-2 text-sm font-semibold text-white">Commande simplifiee</div>
-              </div>
-              <div className="rounded-[24px] border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
-                <div className="text-xs uppercase tracking-[0.18em] text-white/55">Equipe</div>
-                <div className="mt-2 text-sm font-semibold text-white">Dashboard responsive</div>
-              </div>
-              <div className="rounded-[24px] border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
-                <div className="text-xs uppercase tracking-[0.18em] text-white/55">Livraison</div>
-                <div className="mt-2 text-sm font-semibold text-white">Secteurs Dakar guides</div>
-              </div>
+            <div className="relative z-10 max-w-[320px] rounded-[28px] border border-white/10 bg-white/[0.06] p-5 backdrop-blur-sm">
+              <div className="text-[11px] text-[#6b7280]">Utilise par</div>
+              <div className="font-auth mt-1 text-[1.65rem] font-bold text-white">200+ restaurants</div>
+              <div className="text-sm text-[#9ca3af]">en Afrique de l&apos;Ouest</div>
             </div>
           </div>
         </aside>
 
-        <main className="flex min-h-screen flex-col bg-[#fcfbfa]">
-          <div className="border-b border-gray-100 px-5 py-4 lg:hidden">
-            <Link to="/" className="inline-flex items-center gap-3 text-secondary-900" aria-label="Retour a l accueil">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-500 shadow-lg">
-                <ChefHat size={20} className="text-white" />
-              </div>
-              <div>
-                <div className="font-display text-2xl font-bold">Linguere</div>
-                <div className="text-[11px] uppercase tracking-[0.24em] text-gray-400">dakar food delivery</div>
-              </div>
-            </Link>
-          </div>
-
-          <div className="flex flex-1 items-center justify-center px-4 py-8 sm:px-6 lg:px-10 xl:px-14">
-            <div className="w-full max-w-xl">
-              <div className="rounded-[32px] border border-gray-100 bg-white p-6 shadow-[0_24px_60px_rgba(28,25,23,0.08)] sm:p-8 lg:p-10">
-                <div className="mb-8">
-                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-primary-600">{asideLabel}</div>
-                  <h1 className="mt-3 text-3xl font-bold text-secondary-900 sm:text-4xl">{title}</h1>
-                  <p className="mt-3 text-sm leading-6 text-gray-500 sm:text-base">{description}</p>
-                </div>
-
-                {children}
-
-                {footer ? <div className="mt-8 border-t border-gray-100 pt-6">{footer}</div> : null}
-              </div>
+        <main className="relative flex items-center justify-center overflow-hidden bg-[#f4efe7] px-5 py-8 sm:px-6 lg:min-h-screen lg:border-l lg:border-[#decebc] lg:px-10 xl:px-14">
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-[radial-gradient(circle_at_14%_18%,rgba(255,255,255,0.72),transparent_16%),radial-gradient(circle_at_86%_22%,rgba(244,139,74,0.16),transparent_18%)]"
+          />
+          <div className="auth-appear relative z-10 w-full max-w-[520px]">
+            <div className="mb-8">
+              {eyebrow ? (
+                <div className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-600">{eyebrow}</div>
+              ) : null}
+              {headerIcon ? <div className="mb-5">{headerIcon}</div> : null}
+              <h1 className="font-auth text-[2rem] font-semibold leading-tight text-secondary-900 sm:text-[2.4rem]">{title}</h1>
+              <p className="mt-3 text-sm leading-7 text-[#6b7280] sm:text-[15px]">{description}</p>
             </div>
+
+            {children}
+
+            {footer ? <div className="mt-7 border-t border-[#dfd1c2] pt-6">{footer}</div> : null}
           </div>
         </main>
       </div>

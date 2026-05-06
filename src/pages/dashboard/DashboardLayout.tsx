@@ -129,6 +129,11 @@ export default function DashboardLayout() {
     });
   }, []);
 
+  const replaceIngredients = useCallback((items: Ingredient[]) => {
+    setIngredients(items);
+    saveIngredients(items);
+  }, []);
+
   const deleteIngredient = useCallback((itemId: string) => {
     setIngredients((prev) => {
       const next = prev.filter((item) => item.id !== itemId);
@@ -210,6 +215,7 @@ export default function DashboardLayout() {
       deleteMenuItem,
       toggleMenuItemAvailability,
       upsertIngredient,
+      replaceIngredients,
       deleteIngredient,
       adjustIngredientStock,
       upsertStaff,
@@ -234,6 +240,7 @@ export default function DashboardLayout() {
       toggleMenuItemAvailability,
       updateOrderStatus,
       updateStaffStatus,
+      replaceIngredients,
       upsertIngredient,
       upsertMenuItem,
       upsertStaff,

@@ -162,7 +162,7 @@ export default function MenuSection() {
           </Button>
         </motion.div>
 
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {visibleItems.map((item, index) => {
             const quantity = cart[item.id] ?? 0;
             const isFavorite = favoriteIds.has(item.id);
@@ -170,7 +170,7 @@ export default function MenuSection() {
             return (
               <motion.article
                 key={item.id}
-                className={`panel-3d group relative overflow-hidden rounded-[28px] border border-gray-100 bg-white p-5 ${
+                className={`panel-3d group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-gray-100 bg-white p-5 ${
                   quantity > 0 ? 'ring-2 ring-primary-100' : ''
                 }`}
                 initial={{ opacity: 0, y: 24 }}
@@ -191,7 +191,7 @@ export default function MenuSection() {
                 </button>
 
                 {item.image ? (
-                  <div className="relative mb-4 h-44 overflow-hidden rounded-[22px] bg-gray-100">
+                  <div className="relative mb-4 h-56 overflow-hidden rounded-[22px] bg-gray-100">
                     <img src={item.image} alt={item.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
                   </div>
                 ) : null}
@@ -208,29 +208,33 @@ export default function MenuSection() {
                 </div>
 
                 {item.available ? (
-                  <div className="mt-5 flex items-center justify-between gap-4">
-                    <div className="inline-flex items-center gap-2">
-                      <button
-                        type="button"
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-                        onClick={() => decrement(item.id)}
-                        disabled={quantity === 0}
-                      >
-                        <Minus size={16} />
-                      </button>
-                      <span className="w-8 text-center text-sm font-semibold text-secondary-900">{quantity}</span>
-                      <button
-                        type="button"
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary-500 text-white transition hover:bg-primary-600"
-                        onClick={() => increment(item.id)}
-                      >
-                        <Plus size={16} />
-                      </button>
+                  <div className="mt-auto pt-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="inline-flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                          onClick={() => decrement(item.id)}
+                          disabled={quantity === 0}
+                        >
+                          <Minus size={16} />
+                        </button>
+                        <span className="w-8 text-center text-sm font-semibold text-secondary-900">{quantity}</span>
+                        <button
+                          type="button"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary-500 text-white transition hover:bg-primary-600"
+                          onClick={() => increment(item.id)}
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </div>
+                      <span className="shrink-0 text-xs text-gray-500">Ajouter</span>
                     </div>
-                    <span className="shrink-0 text-xs text-gray-500">Ajouter</span>
                   </div>
                 ) : (
-                  <div className="mt-5 inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">Indisponible</div>
+                  <div className="mt-auto pt-6">
+                    <div className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">Indisponible</div>
+                  </div>
                 )}
               </motion.article>
             );

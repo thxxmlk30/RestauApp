@@ -10,6 +10,10 @@ import type {
   ServiceType,
   Staff,
   StaffStatus,
+  StockAuditLine,
+  StockAuditRecord,
+  StockBotChannel,
+  StockBotSettings,
   User,
   UserRole,
 } from '../types';
@@ -19,6 +23,8 @@ const ORDERS_KEY = 'restauapp.orders.v3';
 const INGREDIENTS_KEY = 'restauapp.ingredients.v2';
 const STAFF_KEY = 'restauapp.staff.v2';
 const FAVORITES_KEY = 'restauapp.favorites.v1';
+const STOCK_AUDITS_KEY = 'restauapp.stockAudits.v1';
+const STOCK_BOT_SETTINGS_KEY = 'restauapp.stockBotSettings.v1';
 
 function isBrowserStorageAvailable() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
@@ -39,6 +45,7 @@ const validRoles = new Set<UserRole>(['admin', 'waiter', 'chef', 'delivery', 'cu
 const validOrderStatuses = new Set<OrderStatus>(['pending', 'preparing', 'ready', 'delivered', 'cancelled']);
 const validServiceTypes = new Set<ServiceType>(['dine_in', 'delivery']);
 const validStaffStatuses = new Set<StaffStatus>(['active', 'break', 'off']);
+const validBotChannels = new Set<StockBotChannel>(['email', 'whatsapp']);
 
 function asString(value: unknown) {
   return typeof value === 'string' ? value : null;
@@ -149,8 +156,7 @@ function normalizeOrder(value: unknown): Order | null {
 
   if (normalizedItems.length === 0) return null;
 
-  const rating =
-    ratingRaw !== null && Number.isInteger(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : undefined;
+  const rating = ratingRaw !== null && Number.isInteger(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : undefined;
 
   return {
     id,
@@ -212,11 +218,21 @@ function normalizeIngredient(value: unknown): Ingredient | null {
   const unit = asString(item.unit);
   const minStock = asNumber(item.minStock);
   const reorderThreshold = asNumber(item.reorderThreshold);
+  const criticalStock = asNumber(item.criticalStock);
   const supplier = asString(item.supplier);
   const costPerUnit = asNumber(item.costPerUnit);
   const lastRestockedAt = asString(item.lastRestockedAt);
+  const lastCountedAt = asString(item.lastCountedAt);
 
-  if (!id || !name || currentStock === null || !unit || !validUnits.has(unit as IngredientUnit) || minStock === null || reorderThreshold === null) {
+  if (
+    !id ||
+    !name ||
+    currentStock === null ||
+    !unit ||
+    !validUnits.has(unit as IngredientUnit) ||
+    minStock === null ||
+    reorderThreshold === null
+  ) {
     return null;
   }
 
@@ -227,9 +243,11 @@ function normalizeIngredient(value: unknown): Ingredient | null {
     unit: unit as IngredientUnit,
     minStock,
     reorderThreshold,
+    criticalStock: criticalStock ?? minStock,
     supplier: supplier ?? undefined,
     costPerUnit: costPerUnit ?? undefined,
     lastRestockedAt: lastRestockedAt ?? undefined,
+    lastCountedAt: lastCountedAt ?? undefined,
   };
 }
 
@@ -271,6 +289,71 @@ function normalizeFavorite(value: unknown): FavoriteItem | null {
   return { menuItemId, addedAt };
 }
 
+function normalizeStockAuditLine(value: unknown): StockAuditLine | null {
+  if (!value || typeof value !== 'object') return null;
+  const line = value as Record<string, unknown>;
+  const ingredientId = asString(line.ingredientId);
+  const ingredientName = asString(line.ingredientName);
+  const previousStock = asNumber(line.previousStock);
+  const countedStock = asNumber(line.countedStock);
+  const unit = asString(line.unit);
+  const critical = asBoolean(line.critical);
+  if (!ingredientId || !ingredientName || previousStock === null || countedStock === null || !unit || !validUnits.has(unit as IngredientUnit)) {
+    return null;
+  }
+  return {
+    ingredientId,
+    ingredientName,
+    previousStock,
+    countedStock,
+    unit: unit as IngredientUnit,
+    critical: critical ?? false,
+  };
+}
+
+function normalizeStockAuditRecord(value: unknown): StockAuditRecord | null {
+  if (!value || typeof value !== 'object') return null;
+  const record = value as Record<string, unknown>;
+  const id = asString(record.id);
+  const createdAt = asString(record.createdAt);
+  const channel = asString(record.channel);
+  const totalItems = asNumber(record.totalItems);
+  const criticalItems = asNumber(record.criticalItems);
+  const linesRaw = Array.isArray(record.lines) ? record.lines : null;
+
+  if (!id || !createdAt || !channel || !validBotChannels.has(channel as StockBotChannel) || totalItems === null || criticalItems === null || !linesRaw) {
+    return null;
+  }
+
+  const lines = linesRaw.map(normalizeStockAuditLine).filter(Boolean) as StockAuditLine[];
+  if (lines.length === 0) return null;
+
+  return {
+    id,
+    createdAt,
+    channel: channel as StockBotChannel,
+    totalItems,
+    criticalItems,
+    lines,
+  };
+}
+
+function normalizeStockBotSettings(value: unknown): StockBotSettings | null {
+  if (!value || typeof value !== 'object') return null;
+  const settings = value as Record<string, unknown>;
+  const email = asString(settings.email);
+  const whatsapp = asString(settings.whatsapp);
+  const preferredChannel = asString(settings.preferredChannel);
+
+  if (!email || !whatsapp || !preferredChannel || !validBotChannels.has(preferredChannel as StockBotChannel)) return null;
+
+  return {
+    email,
+    whatsapp,
+    preferredChannel: preferredChannel as StockBotChannel,
+  };
+}
+
 function loadList<T>(key: string, fallback: T[], normalize: (value: unknown) => T | null) {
   if (!isBrowserStorageAvailable()) return fallback;
   try {
@@ -289,6 +372,27 @@ function saveList<T>(key: string, items: T[]) {
   if (!isBrowserStorageAvailable()) return;
   try {
     window.localStorage.setItem(key, JSON.stringify(items));
+  } catch {
+    // ignore write errors
+  }
+}
+
+function loadSingle<T>(key: string, fallback: T, normalize: (value: unknown) => T | null) {
+  if (!isBrowserStorageAvailable()) return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = safeJsonParse(raw);
+    return normalize(parsed) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveSingle<T>(key: string, value: T) {
+  if (!isBrowserStorageAvailable()) return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
     // ignore write errors
   }
@@ -332,4 +436,20 @@ export function loadFavorites() {
 
 export function saveFavorites(items: FavoriteItem[]) {
   saveList(FAVORITES_KEY, items);
+}
+
+export function loadStockAudits() {
+  return loadList<StockAuditRecord>(STOCK_AUDITS_KEY, [], normalizeStockAuditRecord);
+}
+
+export function saveStockAudits(items: StockAuditRecord[]) {
+  saveList(STOCK_AUDITS_KEY, items);
+}
+
+export function loadStockBotSettings(fallback: StockBotSettings) {
+  return loadSingle(STOCK_BOT_SETTINGS_KEY, fallback, normalizeStockBotSettings);
+}
+
+export function saveStockBotSettings(settings: StockBotSettings) {
+  saveSingle(STOCK_BOT_SETTINGS_KEY, settings);
 }

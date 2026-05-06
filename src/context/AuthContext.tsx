@@ -9,7 +9,7 @@ type StoredUser = User & { password: string };
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => boolean;
+  login: (email: string, password: string, rememberUser?: boolean) => boolean;
   registerUser: (data: RegisterData) => { ok: boolean; error?: string };
   logout: () => void;
   isAuthenticated: boolean;
@@ -83,22 +83,38 @@ function saveStoredUsers(users: StoredUser[]) {
   }
 }
 
+function clearSessionUser() {
+  if (!isBrowserStorageAvailable()) return;
+  try {
+    window.localStorage.removeItem(SESSION_KEY);
+    window.sessionStorage.removeItem(SESSION_KEY);
+  } catch {
+    // ignore storage errors
+  }
+}
+
 function loadSessionUser(): User | null {
   if (!isBrowserStorageAvailable()) return null;
   try {
-    const raw = window.localStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    return normalizeUser(safeJsonParse(raw));
+    const localSession = window.localStorage.getItem(SESSION_KEY);
+    if (localSession) return normalizeUser(safeJsonParse(localSession));
+
+    const tabSession = window.sessionStorage.getItem(SESSION_KEY);
+    if (!tabSession) return null;
+    return normalizeUser(safeJsonParse(tabSession));
   } catch {
     return null;
   }
 }
 
-function saveSessionUser(nextUser: User | null) {
+function saveSessionUser(nextUser: User | null, rememberUser = true) {
   if (!isBrowserStorageAvailable()) return;
   try {
-    if (nextUser) window.localStorage.setItem(SESSION_KEY, JSON.stringify(nextUser));
-    else window.localStorage.removeItem(SESSION_KEY);
+    clearSessionUser();
+    if (!nextUser) return;
+
+    const storage = rememberUser ? window.localStorage : window.sessionStorage;
+    storage.setItem(SESSION_KEY, JSON.stringify(nextUser));
   } catch {
     // ignore write errors
   }
@@ -122,13 +138,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (sessionUser) setUser(sessionUser);
   }, []);
 
-  const login = (email: string, password: string): boolean => {
+  const login = (email: string, password: string, rememberUser = true): boolean => {
     const emailNormalized = normalizeEmail(email);
 
     const staffUser = findStaffLogin(emailNormalized, password);
     if (staffUser) {
       setUser(staffUser);
-      saveSessionUser(staffUser);
+      saveSessionUser(staffUser, rememberUser);
       return true;
     }
 
@@ -138,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const nextUser: User = { id: match.id, name: match.name, email: match.email, role: match.role };
     setUser(nextUser);
-    saveSessionUser(nextUser);
+    saveSessionUser(nextUser, rememberUser);
     return true;
   };
 
@@ -174,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null);
-    saveSessionUser(null);
+    clearSessionUser();
   };
 
   return <AuthContext.Provider value={{ user, login, registerUser, logout, isAuthenticated: !!user }}>{children}</AuthContext.Provider>;

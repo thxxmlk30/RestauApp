@@ -18,6 +18,7 @@ export type DashboardOutletContext = {
   deleteMenuItem: (itemId: string) => void;
   toggleMenuItemAvailability: (itemId: string) => void;
   upsertIngredient: (item: Ingredient) => void;
+  replaceIngredients: (items: Ingredient[]) => void;
   deleteIngredient: (itemId: string) => void;
   adjustIngredientStock: (itemId: string, delta: number) => void;
   upsertStaff: (member: Staff) => void;

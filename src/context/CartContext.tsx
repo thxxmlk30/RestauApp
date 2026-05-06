@@ -6,21 +6,18 @@ type CartMap = Record<string, number>;
 
 interface CartContextType {
   cart: CartMap;
-  promoCode: string | null;
   itemCount: number;
   setItemQuantity: (id: string, quantity: number) => void;
   increment: (id: string) => void;
   decrement: (id: string) => void;
   removeItem: (id: string) => void;
   clearCart: () => void;
-  setPromoCode: (code: string | null) => void;
   isCartOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
-
 const CART_KEY = 'restauapp.cart.v1';
 
 function isBrowserStorageAvailable() {
@@ -48,120 +45,95 @@ function normalizeCartMap(value: unknown): CartMap {
   return next;
 }
 
-interface CartData {
-  cart: CartMap;
-  promoCode?: string | null;
-}
-
-function loadCart(): CartData {
-  if (!isBrowserStorageAvailable()) return { cart: {} };
+function loadCart() {
+  if (!isBrowserStorageAvailable()) return {};
   try {
     const raw = window.localStorage.getItem(CART_KEY);
-    if (!raw) return { cart: {} };
-    const parsed = safeJsonParse(raw) as { cart?: unknown; promoCode?: unknown } | null;
-    return {
-      cart: normalizeCartMap(parsed?.cart),
-      promoCode: typeof parsed?.promoCode === 'string' ? parsed.promoCode : null,
-    };
+    if (!raw) return {};
+    const parsed = safeJsonParse(raw) as { cart?: unknown } | Record<string, unknown> | null;
+    if (parsed && typeof parsed === 'object' && 'cart' in parsed) return normalizeCartMap(parsed.cart);
+    return normalizeCartMap(parsed);
   } catch {
-    return { cart: {} };
+    return {};
   }
 }
 
-function saveCart(data: CartData) {
+function saveCart(cart: CartMap) {
   if (!isBrowserStorageAvailable()) return;
   try {
-    window.localStorage.setItem(CART_KEY, JSON.stringify(data));
+    window.localStorage.setItem(CART_KEY, JSON.stringify({ cart }));
   } catch {
     // ignore write errors
   }
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<CartData>(() => loadCart());
+  const [cart, setCart] = useState<CartMap>(() => loadCart());
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const cart = data.cart;
-  const promoCode = data.promoCode ?? null;
-
   useEffect(() => {
-    saveCart(data);
-  }, [data]);
+    saveCart(cart);
+  }, [cart]);
 
   const setItemQuantity = (id: string, quantity: number) => {
     const nextQuantity = Math.max(0, Math.floor(quantity));
-    setData((prev) => {
-      const prevCart = prev.cart;
+    setCart((prevCart) => {
       if (nextQuantity <= 0) {
-        if (!prevCart[id]) return prev;
+        if (!prevCart[id]) return prevCart;
         const nextCart = { ...prevCart };
         delete nextCart[id];
-        return { ...prev, cart: nextCart };
+        return nextCart;
       }
-      if (prevCart[id] === nextQuantity) return prev;
-      return { ...prev, cart: { ...prevCart, [id]: nextQuantity } };
+      if (prevCart[id] === nextQuantity) return prevCart;
+      return { ...prevCart, [id]: nextQuantity };
     });
   };
 
   const increment = (id: string) => {
-    setData((prev) => ({
-      ...prev,
-      cart: { ...prev.cart, [id]: (prev.cart[id] ?? 0) + 1 },
-    }));
+    setCart((prevCart) => ({ ...prevCart, [id]: (prevCart[id] ?? 0) + 1 }));
   };
 
   const decrement = (id: string) => {
-    setData((prev) => {
-      const nextQty = (prev.cart[id] ?? 0) - 1;
+    setCart((prevCart) => {
+      const nextQty = (prevCart[id] ?? 0) - 1;
       if (nextQty <= 0) {
-        if (!prev.cart[id]) return prev;
-        const nextCart = { ...prev.cart };
+        if (!prevCart[id]) return prevCart;
+        const nextCart = { ...prevCart };
         delete nextCart[id];
-        return { ...prev, cart: nextCart };
+        return nextCart;
       }
-      return {
-        ...prev,
-        cart: { ...prev.cart, [id]: nextQty },
-      };
+      return { ...prevCart, [id]: nextQty };
     });
   };
 
   const removeItem = (id: string) => {
-    setData((prev) => {
-      if (!prev.cart[id]) return prev;
-      const nextCart = { ...prev.cart };
+    setCart((prevCart) => {
+      if (!prevCart[id]) return prevCart;
+      const nextCart = { ...prevCart };
       delete nextCart[id];
-      return { ...prev, cart: nextCart };
+      return nextCart;
     });
   };
 
-  const clearCart = () => setData({ cart: {}, promoCode: null });
-
-  const setPromoCode = (code: string | null) => {
-    setData((prev) => ({ ...prev, promoCode: code }));
-  };
-
+  const clearCart = () => setCart({});
   const itemCount = useMemo(() => Object.values(cart).reduce((sum, qty) => sum + qty, 0), [cart]);
-
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
 
   const value = useMemo<CartContextType>(
     () => ({
       cart,
-      promoCode,
       itemCount,
       setItemQuantity,
       increment,
       decrement,
       removeItem,
       clearCart,
-      setPromoCode,
       isCartOpen,
       openCart,
       closeCart,
     }),
-    [cart, promoCode, itemCount, isCartOpen],
+    [cart, itemCount, isCartOpen],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
@@ -172,4 +144,3 @@ export function useCart() {
   if (!context) throw new Error('useCart must be used within CartProvider');
   return context;
 }
-

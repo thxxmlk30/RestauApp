@@ -1,14 +1,6 @@
-import { Clock3, MapPin, Navigation, Store, Truck } from 'lucide-react';
+import { Clock3, MapPin, Navigation, Truck } from 'lucide-react';
 import type { Order } from '../../types';
-import {
-  formatCurrency,
-  formatDeliveryArea,
-  formatStatus,
-  getOrderEtaLabel,
-  getOrderLiveProgress,
-  getOrderTrackingLocation,
-  getTrackingStages,
-} from '../../utils/helpers';
+import { formatDeliveryArea, formatStatus, getOrderEtaLabel, getOrderLiveProgress, getTrackingStages } from '../../utils/helpers';
 
 function buildEmbedUrl(lat: number, lng: number) {
   const delta = 0.022;
@@ -22,98 +14,42 @@ interface DeliveryLiveMapProps {
 
 export default function DeliveryLiveMap({ order, compact = false }: DeliveryLiveMapProps) {
   if (!order.location) {
-    return (
-      <div className="rounded-[24px] border border-dashed border-gray-200 bg-gray-50 p-5 text-sm text-gray-400">
-        Position GPS indisponible pour cette commande.
-      </div>
-    );
+    return <div className="rounded-[24px] border border-dashed border-gray-200 bg-gray-50 p-5 text-sm text-gray-400">Position GPS indisponible pour cette commande.</div>;
   }
 
   const progress = getOrderLiveProgress(order);
-  const livePoint = getOrderTrackingLocation(order);
   const stages = getTrackingStages(order);
-  const routeProgress = `${Math.round(progress * 100)}%`;
 
   return (
     <div className="overflow-hidden rounded-[28px] border border-gray-100 bg-white">
-      <div className="grid gap-0 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="border-b border-gray-100 p-5 xl:border-b-0 xl:border-r">
+      <div className={`grid ${compact ? '' : 'xl:grid-cols-[1fr_0.92fr]'}`}>
+        <div className="p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <div className="text-xs uppercase tracking-[0.18em] text-gray-400">Tracking live</div>
+              <div className="text-xs uppercase tracking-[0.18em] text-gray-400">Suivi commande</div>
               <h3 className="mt-1 text-lg font-semibold text-secondary-900">{formatDeliveryArea(order)}</h3>
               <p className="mt-1 text-sm text-gray-500">{order.deliveryAddress}</p>
             </div>
             <div className="rounded-2xl bg-secondary-900 px-3 py-2 text-right text-white">
-              <div className="text-[11px] uppercase tracking-[0.18em] text-white/60">Course</div>
+              <div className="text-[11px] uppercase tracking-[0.18em] text-white/60">Statut</div>
               <div className="text-sm font-semibold">{formatStatus(order.status)}</div>
             </div>
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-[26px] border border-primary-100 bg-[linear-gradient(135deg,#fff9f3,#ffffff)] p-5">
-            <div className="mb-5 flex items-center justify-between text-xs uppercase tracking-[0.18em] text-gray-400">
-              <span>Restaurant</span>
-              <span>Client</span>
+          <div className="mt-5 rounded-[24px] border border-gray-100 bg-gray-50 p-4">
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <div className="font-medium text-secondary-900">Progression</div>
+              <div className="text-gray-500">{Math.round(progress * 100)}%</div>
             </div>
-            <div className="relative h-44 rounded-[22px] border border-dashed border-primary-200 bg-white/70">
-              <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                <path d="M15,70 C32,40 56,38 85,28" stroke="#e7e5e4" strokeWidth="3" fill="none" strokeDasharray="5 5" />
-                <path
-                  d="M15,70 C32,40 56,38 85,28"
-                  stroke="#f48b4a"
-                  strokeWidth="4"
-                  fill="none"
-                  pathLength="100"
-                  strokeDasharray={`${progress * 100} 100`}
-                  strokeLinecap="round"
-                />
-              </svg>
-
-              <div className="absolute left-[10%] top-[64%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-secondary-900 px-3 py-2 text-xs font-semibold text-white shadow-lg">
-                <Store size={14} />
-                Hub
-              </div>
-              <div className="absolute left-[85%] top-[26%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold text-secondary-900 shadow-lg">
-                <MapPin size={14} className="text-primary-500" />
-                Client
-              </div>
-              {livePoint && (
-                <div
-                  className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-primary-500 px-3 py-2 text-xs font-semibold text-white shadow-xl ring-8 ring-primary-100"
-                  style={{
-                    left: `${15 + 70 * progress}%`,
-                    top: `${70 - 42 * progress}%`,
-                  }}
-                >
-                  <Truck size={14} />
-                  {routeProgress}
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl bg-white p-3 shadow-sm">
-                <div className="text-xs uppercase tracking-[0.16em] text-gray-400">ETA</div>
-                <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-secondary-900">
-                  <Clock3 size={14} className="text-primary-500" />
-                  {getOrderEtaLabel(order)}
-                </div>
-              </div>
-              <div className="rounded-2xl bg-white p-3 shadow-sm">
-                <div className="text-xs uppercase tracking-[0.16em] text-gray-400">Frais</div>
-                <div className="mt-1 text-sm font-semibold text-secondary-900">{formatCurrency(order.deliveryFee ?? 0)}</div>
-              </div>
-              <div className="rounded-2xl bg-white p-3 shadow-sm">
-                <div className="text-xs uppercase tracking-[0.16em] text-gray-400">Livreur</div>
-                <div className="mt-1 text-sm font-semibold text-secondary-900">{order.courierName || 'A assigner'}</div>
-              </div>
+            <div className="mt-3 h-3 overflow-hidden rounded-full bg-gray-200">
+              <div className="h-full rounded-full bg-primary-500 transition-all" style={{ width: `${Math.max(8, Math.round(progress * 100))}%` }} />
             </div>
 
             <div className="mt-4 grid gap-2 sm:grid-cols-4">
               {stages.map((stage) => (
                 <div
                   key={stage.key}
-                  className={`rounded-2xl border px-3 py-2 text-xs ${
+                  className={`rounded-2xl border px-3 py-3 text-xs ${
                     stage.done
                       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                       : stage.active
@@ -126,20 +62,44 @@ export default function DeliveryLiveMap({ order, compact = false }: DeliveryLive
               ))}
             </div>
           </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-gray-100 bg-white p-4">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-gray-400">
+                <Clock3 size={14} />
+                ETA
+              </div>
+              <div className="mt-2 text-sm font-semibold text-secondary-900">{getOrderEtaLabel(order)}</div>
+            </div>
+            <div className="rounded-2xl border border-gray-100 bg-white p-4">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-gray-400">
+                <Truck size={14} />
+                Livreur
+              </div>
+              <div className="mt-2 text-sm font-semibold text-secondary-900">{order.courierName || 'Affectation en cours'}</div>
+            </div>
+            <div className="rounded-2xl border border-gray-100 bg-white p-4">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-gray-400">
+                <MapPin size={14} />
+                Arrivee
+              </div>
+              <div className="mt-2 text-sm font-semibold text-secondary-900">{order.deliverySector || 'Adresse client'}</div>
+            </div>
+          </div>
         </div>
 
-        {!compact && (
-          <div className="flex flex-col">
+        {!compact ? (
+          <div className="border-t border-gray-100 xl:border-l xl:border-t-0">
             <div className="border-b border-gray-100 p-4">
               <div className="flex items-center gap-2 text-sm font-semibold text-secondary-900">
                 <Navigation size={16} className="text-primary-500" />
-                Carte OpenStreetMap
+                Carte de destination
               </div>
-              <p className="mt-1 text-sm text-gray-500">Vue de destination et du secteur de livraison.</p>
+              <p className="mt-1 text-sm text-gray-500">Apercu simple du point de livraison.</p>
             </div>
-            <iframe title={`Carte ${order.id}`} src={buildEmbedUrl(order.location.lat, order.location.lng)} className="min-h-[300px] flex-1 border-0" loading="lazy" />
+            <iframe title={`Carte ${order.id}`} src={buildEmbedUrl(order.location.lat, order.location.lng)} className="min-h-[300px] w-full border-0" loading="lazy" />
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

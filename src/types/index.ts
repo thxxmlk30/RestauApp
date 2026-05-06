@@ -10,6 +10,8 @@ export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'any';
 
 export type ServiceType = 'dine_in' | 'delivery';
 
+export type StockBotChannel = 'email' | 'whatsapp';
+
 export interface User {
   id: string;
   name: string;
@@ -33,9 +35,11 @@ export interface Ingredient {
   unit: IngredientUnit;
   minStock: number;
   reorderThreshold: number;
+  criticalStock: number;
   supplier?: string;
   costPerUnit?: number;
   lastRestockedAt?: string;
+  lastCountedAt?: string;
 }
 
 export interface OrderLocation {
@@ -132,4 +136,28 @@ export interface PromoCode {
 export interface FavoriteItem {
   menuItemId: string;
   addedAt: string;
+}
+
+export interface StockAuditLine {
+  ingredientId: string;
+  ingredientName: string;
+  previousStock: number;
+  countedStock: number;
+  unit: IngredientUnit;
+  critical: boolean;
+}
+
+export interface StockAuditRecord {
+  id: string;
+  createdAt: string;
+  channel: StockBotChannel;
+  totalItems: number;
+  criticalItems: number;
+  lines: StockAuditLine[];
+}
+
+export interface StockBotSettings {
+  email: string;
+  whatsapp: string;
+  preferredChannel: StockBotChannel;
 }
