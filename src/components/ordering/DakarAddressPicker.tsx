@@ -1,14 +1,9 @@
-import { MapPin, Navigation } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { useMemo } from 'react';
 import { dakarDepartments, getCommunesByDepartment, getZoneById, getZonesByCommune } from '../../data/dakarZones';
 import type { DeliveryZone } from '../../types';
-import { buildDeliveryAddressLabel, formatCurrency } from '../../utils/helpers';
+import { formatCurrency } from '../../utils/helpers';
 import { Input } from '../ui/Input';
-
-function buildEmbedUrl(lat: number, lng: number) {
-  const delta = 0.024;
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - delta}%2C${lat - delta}%2C${lng + delta}%2C${lat + delta}&layer=mapnik&marker=${lat}%2C${lng}`;
-}
 
 interface DakarAddressPickerProps {
   department: string;
@@ -47,7 +42,7 @@ export default function DakarAddressPicker({
           Livraison guidee
         </div>
         <h4 className="mt-3 text-lg font-semibold text-secondary-900">Choisissez votre secteur en 3 champs</h4>
-        <p className="mt-1 text-sm text-gray-500">Le choix par liste est prioritaire. La carte sert seulement d apercu une fois le secteur choisi.</p>
+        <p className="mt-1 text-sm text-gray-500">Le choix par liste permet de calculer les frais et le delai sans afficher de carte.</p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -106,40 +101,27 @@ export default function DakarAddressPicker({
       </div>
 
       {selectedZone ? (
-        <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-[28px] border border-gray-100 bg-white p-4">
-            <div className="text-xs uppercase tracking-[0.18em] text-gray-400">Secteur choisi</div>
-            <div className="mt-2 text-lg font-semibold text-secondary-900">{selectedZone.sector}</div>
-            <div className="mt-1 text-sm text-gray-500">
-              {selectedZone.commune}, {selectedZone.department}
-            </div>
+        <div className="rounded-[28px] border border-gray-100 bg-white p-4">
+          <div className="text-xs uppercase tracking-[0.18em] text-gray-400">Secteur choisi</div>
+          <div className="mt-2 text-lg font-semibold text-secondary-900">{selectedZone.sector}</div>
+          <div className="mt-1 text-sm text-gray-500">
+            {selectedZone.commune}, {selectedZone.department}
+          </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl bg-gray-50 p-3">
-                <div className="text-xs uppercase tracking-[0.16em] text-gray-400">Livraison</div>
-                <div className="mt-1 font-semibold text-secondary-900">{formatCurrency(selectedZone.fee)}</div>
-              </div>
-              <div className="rounded-2xl bg-gray-50 p-3">
-                <div className="text-xs uppercase tracking-[0.16em] text-gray-400">ETA</div>
-                <div className="mt-1 font-semibold text-secondary-900">{selectedZone.etaMinutes} min</div>
-              </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-gray-50 p-3">
+              <div className="text-xs uppercase tracking-[0.16em] text-gray-400">Livraison</div>
+              <div className="mt-1 font-semibold text-secondary-900">{formatCurrency(selectedZone.fee)}</div>
             </div>
-
-            <div className="mt-4 rounded-2xl bg-gray-50 p-3">
-              <div className="text-xs uppercase tracking-[0.16em] text-gray-400">Points de repere utiles</div>
-              <div className="mt-2 text-sm text-gray-600">{selectedZone.landmarks.join(' - ')}</div>
+            <div className="rounded-2xl bg-gray-50 p-3">
+              <div className="text-xs uppercase tracking-[0.16em] text-gray-400">ETA</div>
+              <div className="mt-1 font-semibold text-secondary-900">{selectedZone.etaMinutes} min</div>
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[28px] border border-gray-100 bg-white">
-            <div className="border-b border-gray-100 p-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-secondary-900">
-                <Navigation size={16} className="text-primary-500" />
-                Apercu du point de livraison
-              </div>
-              <p className="mt-1 text-sm text-gray-500">{buildDeliveryAddressLabel(selectedZone, streetLine, landmark)}</p>
-            </div>
-            <iframe title={`Carte ${selectedZone.sector}`} src={buildEmbedUrl(selectedZone.lat, selectedZone.lng)} className="h-[280px] w-full border-0" loading="lazy" />
+          <div className="mt-4 rounded-2xl bg-gray-50 p-3">
+            <div className="text-xs uppercase tracking-[0.16em] text-gray-400">Points de repere utiles</div>
+            <div className="mt-2 text-sm text-gray-600">{selectedZone.landmarks.join(' - ')}</div>
           </div>
         </div>
       ) : null}

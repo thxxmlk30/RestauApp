@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BarChart3, ClipboardList, FileText, Home, LayoutDashboard, MapPin, PackageCheck, Route, Users, UtensilsCrossed, X } from 'lucide-react';
+import { BarChart3, ClipboardList, FileText, Home, LayoutDashboard, PackageCheck, Route, Users, UtensilsCrossed, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/Button';
@@ -20,7 +20,6 @@ const navByRole = {
         { to: '/dashboard/menu', label: 'Produits', description: 'Carte et disponibilite', icon: UtensilsCrossed },
         { to: '/dashboard/stock', label: 'Stocks', description: 'Ingredients et reapro', icon: PackageCheck },
         { to: '/dashboard/staff', label: 'Personnel', description: 'Chefs, salle, livreurs', icon: Users },
-        { to: '/dashboard/map', label: 'Tracking', description: 'Carte des courses actives', icon: MapPin },
         { to: '/dashboard/zones', label: 'Zones', description: 'Secteurs Dakar et dispatch', icon: Route },
       ],
     },
@@ -55,7 +54,6 @@ const navByRole = {
       items: [
         { to: '/dashboard', label: 'Courses', description: 'Departs et retards', icon: LayoutDashboard },
         { to: '/dashboard/orders', label: 'A livrer', description: 'Affectation et statut', icon: ClipboardList },
-        { to: '/dashboard/map', label: 'Carte', description: 'Suivi geolocalise', icon: MapPin },
         { to: '/dashboard/zones', label: 'Zones', description: 'Tarifs, secteurs, priorites', icon: Route },
       ],
     },

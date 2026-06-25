@@ -1,7 +1,6 @@
 import { Heart, RotateCcw, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import DeliveryLiveMap from '../../components/dashboard/DeliveryLiveMap';
 import { NavBar } from '../../components/layout/NavBar';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
@@ -40,8 +39,6 @@ export default function MyOrdersPage() {
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     [orders, user?.id],
   );
-
-  const activeDelivery = myOrders.find((order) => order.serviceType === 'delivery' && order.status !== 'delivered' && order.status !== 'cancelled');
 
   const cancelOrder = (id: string) => {
     setOrders((prev) => {
@@ -83,16 +80,6 @@ export default function MyOrdersPage() {
               Retour au menu
             </Link>
           </div>
-
-          {activeDelivery ? (
-            <section className="space-y-4">
-              <div>
-                <h2 className="font-display text-2xl font-bold text-secondary-900">Commande en cours</h2>
-                <p className="mt-1 text-sm text-gray-500">Suivi simplifie: statut, ETA, livreur et destination.</p>
-              </div>
-              <DeliveryLiveMap order={activeDelivery} />
-            </section>
-          ) : null}
 
           {favoriteItems.length > 0 ? (
             <section className="panel-3d rounded-[30px] border border-gray-100 bg-white p-6">

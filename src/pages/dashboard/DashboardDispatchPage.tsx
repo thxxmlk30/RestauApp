@@ -1,7 +1,6 @@
-import { Bike, Building2, Clock3, MapPinned, Route } from 'lucide-react';
+import { Bike, Building2, Clock3, Route } from 'lucide-react';
 import { useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import DeliveryLiveMap from '../../components/dashboard/DeliveryLiveMap';
 import { dakarDepartments } from '../../data/dakarZones';
 import type { DashboardOutletContext } from './dashboardOutletContext';
 import { formatCurrency, getOrderEtaLabel, getZoneMetrics } from '../../utils/helpers';
@@ -18,7 +17,6 @@ export default function DashboardDispatchPage() {
   );
 
   const activeDeliveries = deliveryOrders.filter((order) => order.status !== 'delivered' && order.status !== 'cancelled');
-  const selectedOrder = activeDeliveries[0] ?? deliveryOrders[0];
   const zoneMetrics = useMemo(() => getZoneMetrics(orders).slice(0, 6), [orders]);
   const activeCouriers = staff.filter((member) => member.role === 'delivery' && member.status === 'active');
   const averageEta = useMemo(() => {
@@ -85,21 +83,11 @@ export default function DashboardDispatchPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-6">
-          {selectedOrder ? (
-            <DeliveryLiveMap order={selectedOrder} />
-          ) : (
-            <div className="rounded-[30px] border border-dashed border-gray-200 bg-white p-8 text-sm text-gray-400">
-              Aucune course de livraison a afficher.
-            </div>
-          )}
-        </div>
-
+      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <div className="space-y-6">
           <div className="panel-3d rounded-[30px] border border-gray-100 bg-white p-5">
             <div className="flex items-center gap-2">
-              <MapPinned className="h-5 w-5 text-primary-500" />
+              <Route className="h-5 w-5 text-primary-500" />
               <h2 className="font-bold text-secondary-900">Secteurs les plus actifs</h2>
             </div>
             <div className="mt-4 space-y-3">
@@ -126,7 +114,9 @@ export default function DashboardDispatchPage() {
               {zoneMetrics.length === 0 && <div className="text-sm text-gray-400">Pas encore de donnees de secteur.</div>}
             </div>
           </div>
+        </div>
 
+        <div className="space-y-6">
           <div className="panel-3d rounded-[30px] border border-gray-100 bg-white p-5">
             <div className="flex items-center gap-2">
               <Bike className="h-5 w-5 text-primary-500" />

@@ -9,7 +9,6 @@ import LoginPage from './pages/auth/loginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardDispatchPage from './pages/dashboard/DashboardDispatchPage';
 import DashboardLayout from './pages/dashboard/DashboardLayout';
-import DashboardMapPage from './pages/dashboard/DashboardMapPage';
 import DashboardMenuPage from './pages/dashboard/DashboardMenuPage';
 import DashboardOrdersPage from './pages/dashboard/DashboardOrdersPage';
 import DashboardOverviewPage from './pages/dashboard/DashboardOverviewPage';
@@ -61,7 +60,6 @@ export default function App() {
           <Route path="menu" element={<DashboardMenuPage />} />
           <Route path="stock" element={<DashboardStockPage />} />
           <Route path="staff" element={<DashboardStaffPage />} />
-          <Route path="map" element={<DashboardMapPage />} />
           <Route path="reports" element={<DashboardReportsPage />} />
           <Route path="zones" element={<DashboardDispatchPage />} />
         </Route>
