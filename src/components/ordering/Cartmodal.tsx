@@ -24,36 +24,9 @@ import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
 
 const checkoutSteps = [
-  { title: 'Panier' },
-  { title: 'Livraison ou salle' },
+  { title: 'Panier + service' },
   { title: 'Confirmation' },
 ] as const;
-
-function StepIndicator({ currentStep }: { currentStep: number }) {
-  return (
-    <div className="grid gap-2 sm:grid-cols-3">
-      {checkoutSteps.map((step, index) => {
-        const active = currentStep === index;
-        const done = currentStep > index;
-        return (
-          <div
-            key={step.title}
-            className={`rounded-2xl border px-4 py-3 text-sm font-medium ${
-              done
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                : active
-                  ? 'border-primary-200 bg-primary-50 text-primary-800'
-                  : 'border-gray-200 bg-white text-gray-400'
-            }`}
-          >
-            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs shadow-sm">{index + 1}</span>
-            {step.title}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 export default function CartModal() {
   const { cart, increment, decrement, removeItem, clearCart, isCartOpen, closeCart } = useCart();
@@ -124,7 +97,8 @@ export default function CartModal() {
       return false;
     }
 
-    if (step >= 1) {
+    // Step 0 validation (Panier + service)
+    if (step >= 0) {
       if (serviceType === 'dine_in' && (!Number.isInteger(tableNumber) || tableNumber < 1 || tableNumber > 99)) {
         setFormError('Numero de table invalide (1-99).');
         return false;
@@ -142,7 +116,8 @@ export default function CartModal() {
       }
     }
 
-    if (step >= 2) {
+    // Step 1 validation (Confirmation)
+    if (step >= 1) {
       if (!isAuthenticated || !user) {
         setFormError('Connectez-vous pour confirmer la commande.');
         return false;
@@ -161,7 +136,7 @@ export default function CartModal() {
   };
 
   const submitOrder = () => {
-    if (!validateStep(2) || !user) return;
+    if (!validateStep(1) || !user) return;
 
     const staff = loadStaff(mockStaff);
     const currentOrders = loadOrders(mockOrders);
@@ -285,14 +260,13 @@ export default function CartModal() {
           ) : (
             <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
               <div className="space-y-4">
-                <StepIndicator currentStep={currentStep} />
 
                 {currentStep === 0 ? (
-                  <section className="rounded-[28px] border border-gray-100 bg-white">
-                    <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                  <section className="space-y-4 rounded-[28px] border border-gray-100 bg-white p-4 sm:p-5">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-secondary-900">Verifier votre panier</h3>
-                        <p className="mt-1 text-sm text-gray-500">Gardez seulement l essentiel avant de continuer.</p>
+                        <h3 className="text-lg font-semibold text-secondary-900">Votre panier</h3>
+                        <p className="mt-1 text-sm text-gray-500">Puis choisissez sur place ou livraison.</p>
                       </div>
                       <button
                         type="button"
@@ -304,7 +278,7 @@ export default function CartModal() {
                       </button>
                     </div>
 
-                    <div className="space-y-3 p-4">
+                    <div className="space-y-3">
                       {cartLines.map((line) => (
                         <div key={line.item.id} className="rounded-[24px] border border-gray-100 bg-gray-50 p-4">
                           <div className="flex items-start justify-between gap-4">
@@ -341,99 +315,89 @@ export default function CartModal() {
                         </div>
                       ))}
                     </div>
+
+                    <div className="space-y-3">
+                      <h3 className="text-base font-semibold text-secondary-900">Service</h3>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() => setServiceType('dine_in')}
+                          className={`rounded-[24px] border p-4 text-left transition ${
+                            serviceType === 'dine_in' ? 'border-secondary-900 bg-secondary-900 text-white' : 'border-gray-200 bg-white text-gray-700'
+                          }`}
+                        >
+                          <Store className="mb-2 h-5 w-5" />
+                          <div className="font-semibold">Sur place</div>
+                          <div className={`mt-1 text-sm ${serviceType === 'dine_in' ? 'text-white/75' : 'text-gray-500'}`}>Numero de table.</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setServiceType('delivery')}
+                          className={`rounded-[24px] border p-4 text-left transition ${
+                            serviceType === 'delivery' ? 'border-primary-500 bg-primary-50 text-primary-800' : 'border-gray-200 bg-white text-gray-700'
+                          }`}
+                        >
+                          <Bike className="mb-2 h-5 w-5" />
+                          <div className="font-semibold">Livraison</div>
+                          <div className={`mt-1 text-sm ${serviceType === 'delivery' ? 'text-primary-700' : 'text-gray-500'}`}>Secteur + rue.</div>
+                        </button>
+                      </div>
+
+                      {serviceType === 'dine_in' ? (
+                        <div className="rounded-[24px] border border-gray-100 bg-gray-50 p-4">
+                          <Input
+                            label="Numero de table"
+                            type="number"
+                            min={1}
+                            max={99}
+                            value={tableNumber}
+                            onChange={(event) => setTableNumber(Number(event.target.value))}
+                            className="rounded-2xl bg-white"
+                          />
+                        </div>
+                      ) : (
+                        <div className="rounded-[24px] border border-gray-100 bg-gray-50 p-4">
+                          <DakarAddressPicker
+                            department={department}
+                            commune={commune}
+                            zoneId={zoneId}
+                            streetLine={streetLine}
+                            landmark={landmark}
+                            onDepartmentChange={(value) => {
+                              setDepartment(value);
+                              setCommune('');
+                              setZoneId('');
+                            }}
+                            onCommuneChange={(value) => {
+                              setCommune(value);
+                              setZoneId('');
+                            }}
+                            onZoneChange={(zone) => {
+                              setDepartment(zone.department);
+                              setCommune(zone.commune);
+                              setZoneId(zone.id);
+                            }}
+                            onStreetLineChange={setStreetLine}
+                            onLandmarkChange={setLandmark}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </section>
                 ) : null}
 
                 {currentStep === 1 ? (
                   <section className="space-y-4 rounded-[28px] border border-gray-100 bg-white p-4 sm:p-5">
                     <div>
-                      <h3 className="text-lg font-semibold text-secondary-900">Choisir le lieu de service</h3>
-                      <p className="mt-1 text-sm text-gray-500">Un seul choix de parcours, puis uniquement les champs necessaires.</p>
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => setServiceType('dine_in')}
-                        className={`rounded-[24px] border p-4 text-left transition ${
-                          serviceType === 'dine_in' ? 'border-secondary-900 bg-secondary-900 text-white' : 'border-gray-200 bg-white text-gray-700'
-                        }`}
-                      >
-                        <Store className="mb-2 h-5 w-5" />
-                        <div className="font-semibold">Sur place</div>
-                        <div className={`mt-1 text-sm ${serviceType === 'dine_in' ? 'text-white/75' : 'text-gray-500'}`}>Simple numero de table.</div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setServiceType('delivery')}
-                        className={`rounded-[24px] border p-4 text-left transition ${
-                          serviceType === 'delivery' ? 'border-primary-500 bg-primary-50 text-primary-800' : 'border-gray-200 bg-white text-gray-700'
-                        }`}
-                      >
-                        <Bike className="mb-2 h-5 w-5" />
-                        <div className="font-semibold">Livraison</div>
-                        <div className={`mt-1 text-sm ${serviceType === 'delivery' ? 'text-primary-700' : 'text-gray-500'}`}>Secteur, frais et ETA clairs.</div>
-                      </button>
-                    </div>
-
-                    {serviceType === 'dine_in' ? (
-                      <div className="rounded-[24px] border border-gray-100 bg-gray-50 p-4">
-                        <Input
-                          label="Numero de table"
-                          type="number"
-                          min={1}
-                          max={99}
-                          value={tableNumber}
-                          onChange={(event) => setTableNumber(Number(event.target.value))}
-                          className="rounded-2xl bg-white"
-                        />
-                      </div>
-                    ) : (
-                      <div className="rounded-[24px] border border-gray-100 bg-gray-50 p-4">
-                        <DakarAddressPicker
-                          department={department}
-                          commune={commune}
-                          zoneId={zoneId}
-                          streetLine={streetLine}
-                          landmark={landmark}
-                          onDepartmentChange={(value) => {
-                            setDepartment(value);
-                            setCommune('');
-                            setZoneId('');
-                          }}
-                          onCommuneChange={(value) => {
-                            setCommune(value);
-                            setZoneId('');
-                          }}
-                          onZoneChange={(zone) => {
-                            setDepartment(zone.department);
-                            setCommune(zone.commune);
-                            setZoneId(zone.id);
-                          }}
-                          onStreetLineChange={setStreetLine}
-                          onLandmarkChange={setLandmark}
-                        />
-                      </div>
-                    )}
-                  </section>
-                ) : null}
-
-                {currentStep === 2 ? (
-                  <section className="space-y-4 rounded-[28px] border border-gray-100 bg-white p-4 sm:p-5">
-                    <div>
-                      <h3 className="text-lg font-semibold text-secondary-900">Confirmer la commande</h3>
-                      <p className="mt-1 text-sm text-gray-500">Seulement les informations utiles pour finaliser et suivre la commande.</p>
+                      <h3 className="text-lg font-semibold text-secondary-900">Confirmer</h3>
+                      <p className="mt-1 text-sm text-gray-500">Connexion + informations minimales.</p>
                     </div>
 
                     {isAuthenticated ? (
                       <div className="rounded-[24px] border border-gray-100 bg-gray-50 p-4">
-                        <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-secondary-900">
-                          <UserRound size={16} className="text-primary-500" />
-                          Coordonnees client
-                        </div>
                         <div className="grid gap-4 sm:grid-cols-2">
                           <Input
-                            label="Nom d affichage"
+                            label="Nom"
                             value={customerName}
                             onChange={(event) => setCustomerName(event.target.value)}
                             placeholder={user?.name}
@@ -447,22 +411,11 @@ export default function CartModal() {
                             className="rounded-2xl bg-white"
                           />
                         </div>
-                        {serviceType === 'delivery' ? (
-                          <div className="mt-4">
-                            <Input
-                              label="Instruction pour le livreur"
-                              value={deliveryNotes}
-                              onChange={(event) => setDeliveryNotes(event.target.value)}
-                              placeholder="Portail, etage, interphone..."
-                              className="rounded-2xl bg-white"
-                            />
-                          </div>
-                        ) : null}
                       </div>
                     ) : (
                       <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-5">
                         <div className="text-sm font-semibold text-amber-800">Connexion requise</div>
-                        <p className="mt-2 text-sm text-amber-700">Connectez-vous ou creez un compte pour confirmer et suivre votre commande.</p>
+                        <p className="mt-2 text-sm text-amber-700">Connectez-vous pour valider la commande.</p>
                         <div className="mt-4 grid gap-3 sm:grid-cols-2">
                           <Button type="button" className="rounded-2xl" onClick={() => redirectToAuth('login')}>
                             Se connecter
