@@ -10,6 +10,10 @@ export const apiRoutes = {
   auth: '/auth',
   authLogin: '/auth/login',
   authRegister: '/auth/register',
+  authRequestOtp: '/auth/otp/request',
+  authVerifyOtp: '/auth/otp/verify',
+  authForgotPassword: '/auth/forgot-password',
+  authResetPassword: '/auth/reset-password',
   authMe: '/auth/me',
   users: '/users',
   menuItems: '/menu-items',
@@ -20,4 +24,6 @@ export const apiRoutes = {
   deliveryZones: '/delivery-zones',
   reportsDashboard: '/reports/dashboard',
   reportsTopItems: '/reports/top-items',
+  paymentsStripeSession: (orderId: string) => `/payments/orders/${orderId}/stripe-session`,
+  paymentsStripeConfirm: (orderId: string) => `/payments/orders/${orderId}/stripe-confirm`,
 };

@@ -6,7 +6,7 @@ import TopItemsChart from '../../components/dashboard/TopItemsChart';
 import type { DashboardOutletContext } from './dashboardOutletContext';
 
 export default function DashboardStatsPage() {
-  const { orders, stats, preparingCount } = useOutletContext<DashboardOutletContext>();
+  const { orders, stats, preparingCount, topItems } = useOutletContext<DashboardOutletContext>();
 
   return (
     <div className="space-y-6">
@@ -20,7 +20,7 @@ export default function DashboardStatsPage() {
       <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         <div className="space-y-6">
           <RevenueChart orders={orders} />
-          <TopItemsChart orders={orders} />
+          <TopItemsChart orders={orders} items={topItems} />
         </div>
         <div className="space-y-6">
           <OrdersStatusChart orders={orders} />

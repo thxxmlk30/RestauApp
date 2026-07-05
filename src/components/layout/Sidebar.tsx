@@ -69,7 +69,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location = useLocation();
   const { user } = useAuth();
 
-  const groups = navByRole[user?.role === 'customer' || !user ? 'admin' : user.role];
+  const groups = navByRole[user?.role === 'customer' || user?.role === 'client' || !user ? 'admin' : user.role];
 
   return (
     <motion.aside

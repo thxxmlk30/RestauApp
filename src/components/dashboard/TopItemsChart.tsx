@@ -1,5 +1,6 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { Order } from '../../types';
+import type { TopItemSummary } from '../../services/restaurantApi';
 
 function shortenLabel(value: string, maxLength: number) {
   if (value.length <= maxLength) return value;
@@ -20,8 +21,8 @@ function buildTopItems(orders: Order[], limit: number) {
     .slice(0, limit);
 }
 
-export default function TopItemsChart({ orders }: { orders: Order[] }) {
-  const data = buildTopItems(orders, 6);
+export default function TopItemsChart({ orders, items }: { orders?: Order[]; items?: TopItemSummary[] }) {
+  const data = items?.length ? items.map((item) => ({ name: item.name, qty: item.totalQuantity })) : buildTopItems(orders ?? [], 6);
 
   return (
     <div className="panel-3d rounded-[28px] border border-gray-100 bg-white p-5">

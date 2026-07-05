@@ -12,7 +12,7 @@ interface LoginForm {
 }
 
 function getPostLoginPath(role?: string) {
-  return role === 'customer' ? '/mes-commandes' : '/dashboard';
+  return role === 'customer' || role === 'client' ? '/mes-commandes' : '/dashboard';
 }
 
 function getWrapClass(hasError: boolean) {
@@ -54,9 +54,8 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     setProviderNotice('');
-    await new Promise((resolve) => setTimeout(resolve, 450));
-    const success = login(data.email, data.password, rememberUser);
-    if (!success) setError('Email ou mot de passe incorrect.');
+    const result = await login(data.email, data.password, rememberUser);
+    if (!result.ok) setError(result.error || 'Email ou mot de passe incorrect.');
     setLoading(false);
   };
 

@@ -1,9 +1,10 @@
 import { Heart, MapPin, Minus, Plus, ShoppingCart, Sparkles, Truck } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Meal, MenuItem } from '../../types';
 import { menuItems as defaultMenuItems } from '../../data/menuItems';
 import { useCart } from '../../context/CartContext';
+import { restaurantApi } from '../../services/restaurantApi';
 import { formatCurrency, getSuggestedMeal } from '../../utils/helpers';
 import { loadFavorites, loadMenuItems, saveFavorites } from '../../utils/storage';
 import { Button } from '../ui/Button';
@@ -19,9 +20,27 @@ const meals: { value: Meal; label: string; subtitle: string }[] = [
 
 export default function MenuSection() {
   const [activeMeal, setActiveMeal] = useState<Meal>(() => getSuggestedMeal());
-  const [items] = useState<MenuItem[]>(() => loadMenuItems(defaultMenuItems));
+  const [items, setItems] = useState<MenuItem[]>(() => loadMenuItems(defaultMenuItems));
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(loadFavorites().map((item) => item.menuItemId)));
   const { cart, itemCount, increment, decrement, openCart } = useCart();
+
+  useEffect(() => {
+    let cancelled = false;
+    void restaurantApi
+      .menuItems()
+      .then((response) => {
+        if (!cancelled && response.length > 0) {
+          setItems(response);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setItems(loadMenuItems(defaultMenuItems));
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const visibleItems = useMemo(
     () => items.filter((item) => item.meal === 'any' || item.meal === activeMeal).sort((a, b) => Number(b.available) - Number(a.available)),

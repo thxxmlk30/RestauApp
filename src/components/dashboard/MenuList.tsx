@@ -1,8 +1,29 @@
-import { menuItems } from '../../data/menuItems';
+import { useEffect, useState } from 'react';
+import { menuItems as defaultMenuItems } from '../../data/menuItems';
+import type { MenuItem } from '../../types';
+import { restaurantApi } from '../../services/restaurantApi';
 import { loadMenuItems } from '../../utils/storage';
 
 export default function MenuList() {
-  const items = loadMenuItems(menuItems);
+  const [items, setItems] = useState<MenuItem[]>(() => loadMenuItems(defaultMenuItems));
+
+  useEffect(() => {
+    let cancelled = false;
+    void restaurantApi
+      .menuItems()
+      .then((response) => {
+        if (!cancelled && response.length > 0) {
+          setItems(response);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setItems(loadMenuItems(defaultMenuItems));
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   
   const categories = ['entree', 'plat', 'dessert', 'boisson'] as const;
   

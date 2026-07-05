@@ -1,15 +1,16 @@
 import { Heart, RotateCcw, Star } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { NavBar } from '../../components/layout/NavBar';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { menuItems as defaultMenuItems } from '../../data/menuItems';
-import { mockOrders } from '../../data/orders';
+import type { MenuItem } from '../../types';
 import type { Order, OrderStatus } from '../../types';
+import { restaurantApi } from '../../services/restaurantApi';
 import { formatCurrency, formatDeliveryArea, formatServiceType, formatTimeAgo } from '../../utils/helpers';
-import { loadFavorites, loadMenuItems, loadOrders, saveOrders } from '../../utils/storage';
+import { loadFavorites, loadMenuItems } from '../../utils/storage';
 
 const statusMeta: Record<OrderStatus, { label: string; className: string }> = {
   pending: { label: 'En attente', className: 'bg-amber-50 text-amber-700 border-amber-200' },
@@ -22,15 +23,23 @@ const statusMeta: Record<OrderStatus, { label: string; className: string }> = {
 export default function MyOrdersPage() {
   const { user } = useAuth();
   const { increment, openCart } = useCart();
-  const [orders, setOrders] = useState<Order[]>(() => loadOrders(mockOrders));
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(() => loadMenuItems(defaultMenuItems));
   const [ratingDrafts, setRatingDrafts] = useState<Record<string, number>>({});
-
-  const menuItems = useMemo(() => loadMenuItems(defaultMenuItems), []);
+  const [paymentLoadingId, setPaymentLoadingId] = useState('');
   const favorites = useMemo(() => loadFavorites(), []);
   const favoriteItems = useMemo(
     () => menuItems.filter((item) => favorites.some((favorite) => favorite.menuItemId === item.id)),
     [favorites, menuItems],
   );
+
+  useEffect(() => {
+    restaurantApi.myOrders().then(setOrders).catch(() => setOrders([]));
+    restaurantApi
+      .menuItems()
+      .then(setMenuItems)
+      .catch(() => setMenuItems(loadMenuItems(defaultMenuItems)));
+  }, []);
 
   const myOrders = useMemo(
     () =>
@@ -41,20 +50,16 @@ export default function MyOrdersPage() {
   );
 
   const cancelOrder = (id: string) => {
-    setOrders((prev) => {
-      const next = prev.map((order) => (order.id === id && order.status === 'pending' ? { ...order, status: 'cancelled' as const } : order));
-      saveOrders(next);
-      return next;
+    void restaurantApi.cancelOrder(id).then((updatedOrder) => {
+      setOrders((prev) => prev.map((order) => (order.id === id ? updatedOrder : order)));
     });
   };
 
   const rateOrder = (orderId: string) => {
     const rating = ratingDrafts[orderId];
     if (!rating) return;
-    setOrders((prev) => {
-      const next = prev.map((order) => (order.id === orderId ? { ...order, rating, ratedAt: new Date().toISOString() } : order));
-      saveOrders(next);
-      return next;
+    void restaurantApi.rateOrder(orderId, rating).then((updatedOrder) => {
+      setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
     });
   };
 
@@ -63,6 +68,18 @@ export default function MyOrdersPage() {
       for (let index = 0; index < item.quantity; index += 1) increment(item.menuItemId);
     });
     openCart();
+  };
+
+  const payOrder = (orderId: string) => {
+    setPaymentLoadingId(orderId);
+    void restaurantApi
+      .createStripeCheckout(orderId)
+      .then((response) => {
+        if (response.checkoutUrl) {
+          window.location.assign(response.checkoutUrl);
+        }
+      })
+      .finally(() => setPaymentLoadingId(''));
   };
 
   return (
@@ -176,6 +193,7 @@ export default function MyOrdersPage() {
                           <div>Chef: {order.assignedChefName || 'Affectation en cours'}</div>
                           {order.serviceType === 'delivery' ? <div className="mt-2">Livreur: {order.courierName || 'Affectation en cours'}</div> : null}
                           {order.serviceType === 'delivery' ? <div className="mt-2">Adresse: {order.deliveryAddress}</div> : null}
+                          <div className="mt-2">Paiement: {order.paymentStatus === 'paid' ? 'Payée' : order.paymentStatus === 'pending' ? 'En attente' : 'Non payée'}</div>
                           {order.rating ? (
                             <div className="mt-3 flex items-center gap-1 text-amber-500">
                               {Array.from({ length: order.rating }).map((_, index) => (
@@ -188,6 +206,11 @@ export default function MyOrdersPage() {
                     </div>
 
                     <div className="mt-5 flex flex-wrap gap-3">
+                      {order.paymentStatus !== 'paid' ? (
+                        <Button type="button" size="sm" onClick={() => payOrder(order.id)} disabled={paymentLoadingId === order.id}>
+                          Payer avec Stripe
+                        </Button>
+                      ) : null}
                       <Button type="button" variant="outline" size="sm" onClick={() => reorder(order)}>
                         <RotateCcw size={14} className="mr-2" />
                         Recommander

@@ -11,8 +11,9 @@ export function NavBar() {
   const { isAuthenticated, user, logout } = useAuth();
   const { itemCount, openCart } = useCart();
 
-  const accountPath = user?.role === 'customer' ? '/mes-commandes' : '/dashboard';
-  const accountLabel = user?.role === 'customer' ? 'Mes commandes' : 'Dashboard';
+  const isClient = user?.role === 'customer' || user?.role === 'client';
+  const accountPath = isClient ? '/mes-commandes' : '/dashboard';
+  const accountLabel = isClient ? 'Mes commandes' : 'Dashboard';
 
   return (
     <nav className="fixed top-0 z-40 w-full border-b border-white/50 bg-white/88 shadow-lg backdrop-blur-xl">

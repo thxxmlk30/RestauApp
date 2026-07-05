@@ -1,4 +1,5 @@
 import type { DashboardStats, Ingredient, MenuItem, Order, OrderStatus, Staff, StaffStatus } from '../../types';
+import type { TopItemSummary } from '../../services/restaurantApi';
 
 export type DashboardStatusOption = { value: OrderStatus; label: string };
 
@@ -7,6 +8,7 @@ export type DashboardOutletContext = {
   menuItems: MenuItem[];
   ingredients: Ingredient[];
   staff: Staff[];
+  topItems: TopItemSummary[];
   stats: DashboardStats;
   preparingCount: number;
   statusOptions: DashboardStatusOption[];

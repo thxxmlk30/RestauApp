@@ -7,6 +7,9 @@ import LandingPage from './pages/LandingPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import LoginPage from './pages/auth/loginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import VerifyOtpPage from './pages/auth/VerifyOtpPage';
+import StripeCancelPage from './pages/StripeCancelPage';
+import StripeSuccessPage from './pages/StripeSuccessPage';
 import DashboardDispatchPage from './pages/dashboard/DashboardDispatchPage';
 import DashboardLayout from './pages/dashboard/DashboardLayout';
 import DashboardMenuPage from './pages/dashboard/DashboardMenuPage';
@@ -28,7 +31,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
   }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to={user.role === 'customer' ? '/mes-commandes' : '/dashboard'} replace />;
+    return <Navigate to={user.role === 'customer' || user.role === 'client' ? '/mes-commandes' : '/dashboard'} replace />;
   }
 
   return <>{children}</>;
@@ -44,7 +47,10 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-otp" element={<VerifyOtpPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/payment/stripe/success" element={<StripeSuccessPage />} />
+        <Route path="/payment/stripe/cancel" element={<StripeCancelPage />} />
 
         <Route
           path="/dashboard"
@@ -67,7 +73,7 @@ export default function App() {
         <Route
           path="/mes-commandes"
           element={
-            <ProtectedRoute allowedRoles={['customer']}>
+            <ProtectedRoute allowedRoles={['customer', 'client']}>
               <MyOrdersPage />
             </ProtectedRoute>
           }

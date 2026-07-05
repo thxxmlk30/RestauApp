@@ -33,8 +33,13 @@ export async function apiRequest<T>(path: string, options: ApiOptions = {}): Pro
   });
 
   if (!response.ok) {
+    if (response.status === 401) clearApiToken();
+
     const errorBody = await response.json().catch(() => null);
-    throw new Error(errorBody?.message || `Erreur API ${response.status}`);
+    const message =
+      (Array.isArray(errorBody?.message) ? errorBody.message.join(', ') : errorBody?.message) ||
+      `Erreur API ${response.status}`;
+    throw new Error(message);
   }
 
   if (response.status === 204) return undefined as T;

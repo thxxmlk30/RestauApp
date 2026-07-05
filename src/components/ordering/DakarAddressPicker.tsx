@@ -1,11 +1,11 @@
 import { MapPin } from 'lucide-react';
 import { useMemo } from 'react';
-import { dakarDepartments, getCommunesByDepartment, getZoneById, getZonesByCommune } from '../../data/dakarZones';
 import type { DeliveryZone } from '../../types';
 import { formatCurrency } from '../../utils/helpers';
 import { Input } from '../ui/Input';
 
 interface DakarAddressPickerProps {
+  zones: DeliveryZone[];
   department: string;
   commune: string;
   zoneId: string;
@@ -19,6 +19,7 @@ interface DakarAddressPickerProps {
 }
 
 export default function DakarAddressPicker({
+  zones,
   department,
   commune,
   zoneId,
@@ -30,9 +31,10 @@ export default function DakarAddressPicker({
   onStreetLineChange,
   onLandmarkChange,
 }: DakarAddressPickerProps) {
-  const communes = useMemo(() => (department ? getCommunesByDepartment(department) : []), [department]);
-  const zones = useMemo(() => (commune ? getZonesByCommune(commune) : []), [commune]);
-  const selectedZone = useMemo(() => getZoneById(zoneId), [zoneId]);
+  const departments = useMemo(() => Array.from(new Set(zones.map((zone) => zone.department))), [zones]);
+  const communes = useMemo(() => (department ? Array.from(new Set(zones.filter((zone) => zone.department === department).map((zone) => zone.commune))) : []), [department, zones]);
+  const communeZones = useMemo(() => (commune ? zones.filter((zone) => zone.commune === commune) : []), [commune, zones]);
+  const selectedZone = useMemo(() => zones.find((zone) => zone.id === zoneId), [zoneId, zones]);
 
   return (
     <div className="space-y-4">
@@ -54,7 +56,7 @@ export default function DakarAddressPicker({
             className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-secondary-900 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="">Choisir un departement</option>
-            {dakarDepartments.map((item) => (
+            {departments.map((item) => (
               <option key={item} value={item}>
                 {item}
               </option>
@@ -91,7 +93,7 @@ export default function DakarAddressPicker({
             className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-secondary-900 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-gray-50"
           >
             <option value="">{commune ? 'Choisir un secteur' : 'Choisissez une commune'}</option>
-            {zones.map((zone) => (
+            {communeZones.map((zone) => (
               <option key={zone.id} value={zone.id}>
                 {zone.sector}
               </option>

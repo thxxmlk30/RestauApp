@@ -9,6 +9,7 @@ import { mockIngredients } from '../../data/ingredients';
 import { menuItems as defaultMenuItems } from '../../data/menuItems';
 import { mockOrders } from '../../data/orders';
 import { mockStaff } from '../../data/staff';
+import { restaurantApi, type TopItemSummary } from '../../services/restaurantApi';
 import type { Ingredient, MenuItem, Order, OrderStatus, Staff, StaffStatus } from '../../types';
 import { buildDashboardStats, formatRole } from '../../utils/helpers';
 import {
@@ -28,15 +29,73 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [orders, setOrders] = useState<Order[]>(() => loadOrders(mockOrders));
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(() => loadMenuItems(defaultMenuItems));
-  const [ingredients, setIngredients] = useState<Ingredient[]>(() => loadIngredients(mockIngredients));
-  const [staff, setStaff] = useState<Staff[]>(() => loadStaff(mockStaff));
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
+  const [topItems, setTopItems] = useState<TopItemSummary[]>([]);
+  const [dashboardReport, setDashboardReport] = useState<null | {
+    todayOrders?: number;
+    todayRevenue?: number;
+    deliveryOrders?: number;
+    dineInOrders?: number;
+    pendingOrders?: number;
+    ingredientsLow?: number;
+  }>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     setIsMobileSidebarOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (isAdmin) {
+      Promise.allSettled([
+        restaurantApi.orders(),
+        restaurantApi.menuItems(),
+        restaurantApi.ingredients(),
+        restaurantApi.staff(),
+        restaurantApi.dashboardReport(),
+        restaurantApi.topItems(6),
+      ]).then(([ordersResult, menuResult, ingredientsResult, staffResult, reportResult, topItemsResult]) => {
+        if (cancelled) return;
+
+        if (ordersResult.status === 'fulfilled') setOrders(ordersResult.value);
+        if (menuResult.status === 'fulfilled') setMenuItems(menuResult.value);
+        if (ingredientsResult.status === 'fulfilled') setIngredients(ingredientsResult.value as Ingredient[]);
+        if (staffResult.status === 'fulfilled') setStaff(staffResult.value as Staff[]);
+        if (reportResult.status === 'fulfilled') {
+          const report = reportResult.value as {
+            todayOrders?: number;
+            todayRevenue?: number;
+            deliveryOrders?: number;
+            dineInOrders?: number;
+            pendingOrders?: number;
+            ingredientsLow?: number;
+          };
+          setDashboardReport(report);
+        }
+        if (topItemsResult.status === 'fulfilled') setTopItems(topItemsResult.value);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setOrders(loadOrders(mockOrders));
+    setMenuItems(loadMenuItems(defaultMenuItems));
+    setIngredients(loadIngredients(mockIngredients));
+    setStaff(loadStaff(mockStaff));
+    setTopItems([]);
+    setDashboardReport(null);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin]);
 
   const toggleSidebar = useCallback(() => {
     setIsMobileSidebarOpen((open) => !open);
@@ -48,25 +107,45 @@ export default function DashboardLayout() {
   }, [logout, navigate]);
 
   const updateOrderStatus = useCallback((orderId: string, newStatus: OrderStatus) => {
+    if (isAdmin) {
+      void restaurantApi.updateOrderStatus(orderId, newStatus).then((updatedOrder) => {
+        setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
+      });
+      return;
+    }
+
     setOrders((prev) => {
       const next = prev.map((order) => (order.id === orderId ? { ...order, status: newStatus } : order));
       saveOrders(next);
       return next;
     });
-  }, []);
+  }, [isAdmin]);
 
   const deleteOrder = useCallback((orderId: string) => {
+    if (isAdmin) {
+      void restaurantApi.deleteOrder(orderId).then(() => {
+        setOrders((prev) => prev.filter((order) => order.id !== orderId));
+      });
+      return;
+    }
+
     setOrders((prev) => {
       const next = prev.filter((order) => order.id !== orderId);
       saveOrders(next);
       return next;
     });
-  }, []);
+  }, [isAdmin]);
 
   const assignCourier = useCallback(
     (orderId: string, staffId: string) => {
       const courier = staff.find((member) => member.id === staffId && member.role === 'delivery');
       if (!courier) return;
+      if (isAdmin) {
+        void restaurantApi.assignOrderCourier(orderId, courier.id, courier.name).then((updatedOrder) => {
+          setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
+        });
+        return;
+      }
       setOrders((prev) => {
         const next = prev.map((order) =>
           order.id === orderId ? { ...order, courierId: courier.id, courierName: courier.name } : order,
@@ -75,13 +154,19 @@ export default function DashboardLayout() {
         return next;
       });
     },
-    [staff],
+    [isAdmin, staff],
   );
 
   const assignChef = useCallback(
     (orderId: string, staffId: string) => {
       const chef = staff.find((member) => member.id === staffId && member.role === 'chef');
       if (!chef) return;
+      if (isAdmin) {
+        void restaurantApi.assignOrderChef(orderId, chef.id, chef.name).then((updatedOrder) => {
+          setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
+        });
+        return;
+      }
       setOrders((prev) => {
         const next = prev.map((order) =>
           order.id === orderId ? { ...order, assignedChefId: chef.id, assignedChefName: chef.name } : order,
@@ -90,10 +175,18 @@ export default function DashboardLayout() {
         return next;
       });
     },
-    [staff],
+    [isAdmin, staff],
   );
 
   const upsertMenuItem = useCallback((item: MenuItem) => {
+    if (isAdmin) {
+      const request = item.id ? restaurantApi.updateMenuItem(item.id, item) : restaurantApi.createMenuItem(item);
+      void request.then((savedItem) => {
+        setMenuItems((prev) => (item.id ? prev.map((current) => (current.id === savedItem.id ? savedItem : current)) : [savedItem, ...prev]));
+      });
+      return;
+    }
+
     setMenuItems((prev) => {
       const next = prev.some((current) => current.id === item.id)
         ? prev.map((current) => (current.id === item.id ? item : current))
@@ -101,25 +194,49 @@ export default function DashboardLayout() {
       saveMenuItems(next);
       return next;
     });
-  }, []);
+  }, [isAdmin]);
 
   const deleteMenuItem = useCallback((itemId: string) => {
+    if (isAdmin) {
+      void restaurantApi.deleteMenuItem(itemId).then(() => {
+        setMenuItems((prev) => prev.filter((item) => item.id !== itemId));
+      });
+      return;
+    }
+
     setMenuItems((prev) => {
       const next = prev.filter((item) => item.id !== itemId);
       saveMenuItems(next);
       return next;
     });
-  }, []);
+  }, [isAdmin]);
 
   const toggleMenuItemAvailability = useCallback((itemId: string) => {
+    if (isAdmin) {
+      const current = menuItems.find((item) => item.id === itemId);
+      if (!current) return;
+      void restaurantApi.updateMenuItem(itemId, { available: !current.available }).then((savedItem) => {
+        setMenuItems((prev) => prev.map((item) => (item.id === itemId ? savedItem : item)));
+      });
+      return;
+    }
+
     setMenuItems((prev) => {
       const next = prev.map((item) => (item.id === itemId ? { ...item, available: !item.available } : item));
       saveMenuItems(next);
       return next;
     });
-  }, []);
+  }, [isAdmin, menuItems]);
 
   const upsertIngredient = useCallback((item: Ingredient) => {
+    if (isAdmin) {
+      const request = item.id ? restaurantApi.updateIngredient(item.id, item) : restaurantApi.createIngredient(item);
+      void request.then((savedItem) => {
+        setIngredients((prev) => (item.id ? prev.map((current) => (current.id === savedItem.id ? savedItem : current)) : [savedItem, ...prev]));
+      });
+      return;
+    }
+
     setIngredients((prev) => {
       const next = prev.some((current) => current.id === item.id)
         ? prev.map((current) => (current.id === item.id ? item : current))
@@ -127,7 +244,7 @@ export default function DashboardLayout() {
       saveIngredients(next);
       return next;
     });
-  }, []);
+  }, [isAdmin]);
 
   const replaceIngredients = useCallback((items: Ingredient[]) => {
     setIngredients(items);
@@ -135,14 +252,34 @@ export default function DashboardLayout() {
   }, []);
 
   const deleteIngredient = useCallback((itemId: string) => {
+    if (isAdmin) {
+      void restaurantApi.deleteIngredient(itemId).then(() => {
+        setIngredients((prev) => prev.filter((item) => item.id !== itemId));
+      });
+      return;
+    }
+
     setIngredients((prev) => {
       const next = prev.filter((item) => item.id !== itemId);
       saveIngredients(next);
       return next;
     });
-  }, []);
+  }, [isAdmin]);
 
   const adjustIngredientStock = useCallback((itemId: string, delta: number) => {
+    if (isAdmin) {
+      const current = ingredients.find((item) => item.id === itemId);
+      if (!current) return;
+      void restaurantApi.updateIngredient(itemId, {
+        ...current,
+        currentStock: Math.max(0, Number((current.currentStock + delta).toFixed(1))),
+        lastRestockedAt: delta > 0 ? new Date().toISOString() : current.lastRestockedAt,
+      }).then((savedItem) => {
+        setIngredients((prev) => prev.map((item) => (item.id === itemId ? savedItem : item)));
+      });
+      return;
+    }
+
     setIngredients((prev) => {
       const next = prev.map((item) =>
         item.id === itemId
@@ -156,9 +293,17 @@ export default function DashboardLayout() {
       saveIngredients(next);
       return next;
     });
-  }, []);
+  }, [ingredients, isAdmin]);
 
   const upsertStaff = useCallback((member: Staff) => {
+    if (isAdmin) {
+      const request = member.id ? restaurantApi.updateStaff(member.id, member) : restaurantApi.createStaff(member);
+      void request.then((savedMember) => {
+        setStaff((prev) => (member.id ? prev.map((current) => (current.id === savedMember.id ? savedMember : current)) : [savedMember, ...prev]));
+      });
+      return;
+    }
+
     setStaff((prev) => {
       const next = prev.some((current) => current.id === member.id)
         ? prev.map((current) => (current.id === member.id ? member : current))
@@ -166,25 +311,57 @@ export default function DashboardLayout() {
       saveStaff(next);
       return next;
     });
-  }, []);
+  }, [isAdmin]);
 
   const deleteStaff = useCallback((staffId: string) => {
+    if (isAdmin) {
+      void restaurantApi.deleteStaff(staffId).then(() => {
+        setStaff((prev) => prev.filter((member) => member.id !== staffId));
+      });
+      return;
+    }
+
     setStaff((prev) => {
       const next = prev.filter((member) => member.id !== staffId);
       saveStaff(next);
       return next;
     });
-  }, []);
+  }, [isAdmin]);
 
   const updateStaffStatus = useCallback((staffId: string, status: StaffStatus) => {
+    if (isAdmin) {
+      const member = staff.find((item) => item.id === staffId);
+      if (!member) return;
+      void restaurantApi.updateStaff(staffId, { ...member, status }).then((savedMember) => {
+        setStaff((prev) => prev.map((current) => (current.id === staffId ? savedMember : current)));
+      });
+      return;
+    }
+
     setStaff((prev) => {
       const next = prev.map((member) => (member.id === staffId ? { ...member, status } : member));
       saveStaff(next);
       return next;
     });
-  }, []);
+  }, [isAdmin, staff]);
 
-  const stats = useMemo(() => buildDashboardStats(orders, ingredients, staff), [ingredients, orders, staff]);
+  const stats = useMemo(() => {
+    if (isAdmin && dashboardReport) {
+      return {
+        todayOrders: dashboardReport.todayOrders ?? 0,
+        todayRevenue: dashboardReport.todayRevenue ?? 0,
+        occupiedTables: orders.filter((order) => order.serviceType === 'dine_in' && order.status !== 'delivered' && order.status !== 'cancelled').length,
+        totalTables: Math.max(orders.filter((order) => order.serviceType === 'dine_in').length, 1),
+        pendingOrders: dashboardReport.pendingOrders ?? 0,
+        ingredientsLow: dashboardReport.ingredientsLow ?? 0,
+        deliveryOrders: dashboardReport.deliveryOrders ?? 0,
+        dineInOrders: dashboardReport.dineInOrders ?? 0,
+        activeCouriers: staff.filter((member) => member.role === 'delivery' && member.status === 'active').length,
+      };
+    }
+
+    return buildDashboardStats(orders, ingredients, staff);
+  }, [dashboardReport, ingredients, isAdmin, orders, staff]);
   const preparingCount = useMemo(() => orders.filter((order) => order.status === 'preparing').length, [orders]);
 
   const statusOptions: DashboardStatusOption[] = useMemo(
@@ -204,6 +381,7 @@ export default function DashboardLayout() {
       menuItems,
       ingredients,
       staff,
+      topItems,
       stats,
       preparingCount,
       statusOptions,
@@ -234,6 +412,7 @@ export default function DashboardLayout() {
       menuItems,
       orders,
       preparingCount,
+      topItems,
       staff,
       stats,
       statusOptions,

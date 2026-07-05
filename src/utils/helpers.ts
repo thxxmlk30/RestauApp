@@ -51,6 +51,7 @@ export function formatRole(role: UserRole) {
     chef: 'Chef',
     delivery: 'Livreur',
     customer: 'Client',
+    client: 'Client',
   }[role];
 }
 

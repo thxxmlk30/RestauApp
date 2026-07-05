@@ -1,23 +1,21 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { mockStaff } from '../data/staff';
 import type { User, UserRole } from '../types';
-import { loadStaff } from '../utils/storage';
+import { clearApiToken, getApiToken } from '../services/apiClient';
+import { restaurantApi } from '../services/restaurantApi';
 
 type RegisterData = { name: string; email: string; password: string };
-type StoredUser = User & { password: string };
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, rememberUser?: boolean) => boolean;
-  registerUser: (data: RegisterData) => { ok: boolean; error?: string };
+  login: (email: string, password: string, rememberUser?: boolean) => Promise<{ ok: boolean; error?: string }>;
+  registerUser: (data: RegisterData) => Promise<{ ok: boolean; error?: string; email?: string; message?: string; devOtpCode?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
 }
 
-const USERS_KEY = 'restauapp.users.v2';
 const SESSION_KEY = 'restauapp.session.v2';
-const validRoles = new Set<UserRole>(['admin', 'waiter', 'chef', 'delivery', 'customer']);
+const validRoles = new Set<UserRole>(['admin', 'waiter', 'chef', 'delivery', 'customer', 'client']);
 
 function isBrowserStorageAvailable() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
@@ -35,10 +33,6 @@ function asString(value: unknown) {
   return typeof value === 'string' ? value : null;
 }
 
-function normalizeEmail(value: string) {
-  return value.trim().toLowerCase();
-}
-
 function normalizeUser(value: unknown): User | null {
   if (!value || typeof value !== 'object') return null;
   const user = value as Record<string, unknown>;
@@ -50,37 +44,6 @@ function normalizeUser(value: unknown): User | null {
 
   if (!id || !name || !email || !role || !validRoles.has(role as UserRole)) return null;
   return { id, name, email, role: role as UserRole };
-}
-
-function normalizeStoredUser(value: unknown): StoredUser | null {
-  if (!value || typeof value !== 'object') return null;
-  const user = value as Record<string, unknown>;
-  const normalized = normalizeUser(user);
-  const password = asString(user.password);
-  if (!normalized || !password) return null;
-  return { ...normalized, password };
-}
-
-function loadStoredUsers(): StoredUser[] {
-  if (!isBrowserStorageAvailable()) return [];
-  try {
-    const raw = window.localStorage.getItem(USERS_KEY);
-    if (!raw) return [];
-    const parsed = safeJsonParse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizeStoredUser).filter(Boolean) as StoredUser[];
-  } catch {
-    return [];
-  }
-}
-
-function saveStoredUsers(users: StoredUser[]) {
-  if (!isBrowserStorageAvailable()) return;
-  try {
-    window.localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  } catch {
-    // ignore write errors
-  }
 }
 
 function clearSessionUser() {
@@ -120,14 +83,6 @@ function saveSessionUser(nextUser: User | null, rememberUser = true) {
   }
 }
 
-function findStaffLogin(email: string, password: string) {
-  if (password !== 'Linguere1234') return null;
-  const staff = loadStaff(mockStaff);
-  const match = staff.find((member) => normalizeEmail(member.email) === email);
-  if (!match) return null;
-  return { id: match.id, name: match.name, email: match.email, role: match.role } satisfies User;
-}
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -135,62 +90,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const sessionUser = loadSessionUser();
+    const token = getApiToken();
+
+    if (token) {
+      restaurantApi
+        .me()
+        .then((nextUser) => {
+          const normalized = normalizeUser(nextUser);
+          if (!normalized) throw new Error('Profil invalide.');
+          setUser(normalized);
+          saveSessionUser(normalized);
+        })
+        .catch(() => {
+          clearApiToken();
+          if (sessionUser) {
+            setUser(sessionUser);
+          } else {
+            clearSessionUser();
+            setUser(null);
+          }
+        });
+      return;
+    }
+
     if (sessionUser) setUser(sessionUser);
   }, []);
 
-  const login = (email: string, password: string, rememberUser = true): boolean => {
-    const emailNormalized = normalizeEmail(email);
-
-    const staffUser = findStaffLogin(emailNormalized, password);
-    if (staffUser) {
-      setUser(staffUser);
-      saveSessionUser(staffUser, rememberUser);
-      return true;
+  const login = async (email: string, password: string, rememberUser = true) => {
+    try {
+      const response = await restaurantApi.login(email, password);
+      const nextUser = normalizeUser(response.user);
+      if (!nextUser) return { ok: false, error: 'Profil de connexion invalide.' };
+      setUser(nextUser);
+      saveSessionUser(nextUser, rememberUser);
+      return { ok: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Connexion impossible.';
+      return { ok: false, error: message };
     }
-
-    const users = loadStoredUsers();
-    const match = users.find((item) => normalizeEmail(item.email) === emailNormalized && item.password === password);
-    if (!match) return false;
-
-    const nextUser: User = { id: match.id, name: match.name, email: match.email, role: match.role };
-    setUser(nextUser);
-    saveSessionUser(nextUser, rememberUser);
-    return true;
   };
 
-  const registerUser = (data: RegisterData): { ok: boolean; error?: string } => {
+  const registerUser = async (data: RegisterData) => {
     const name = data.name.trim();
-    const email = normalizeEmail(data.email);
+    const email = data.email.trim().toLowerCase();
     const password = data.password;
 
     if (!name || name.length < 2) return { ok: false, error: 'Le nom doit contenir au moins 2 caracteres.' };
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'Email invalide.' };
     if (!password || password.length < 6) return { ok: false, error: 'Le mot de passe doit contenir au moins 6 caracteres.' };
 
-    const staffExists = loadStaff(mockStaff).some((member) => normalizeEmail(member.email) === email);
-    if (staffExists) return { ok: false, error: 'Cet email est reserve au personnel.' };
-
-    const existingUsers = loadStoredUsers();
-    if (existingUsers.some((item) => normalizeEmail(item.email) === email)) {
-      return { ok: false, error: 'Cet email est deja utilise.' };
+    try {
+      const response = await restaurantApi.register(name, email, password);
+      return { ok: true, email: response.email ?? email, message: response.message, devOtpCode: response.devOtpCode };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Impossible de creer le compte.';
+      return { ok: false, error: message };
     }
-
-    const nextUser: User = {
-      id: Date.now().toString(),
-      name,
-      email,
-      role: 'customer',
-    };
-
-    saveStoredUsers([{ ...nextUser, password }, ...existingUsers]);
-    setUser(nextUser);
-    saveSessionUser(nextUser);
-    return { ok: true };
   };
 
   const logout = () => {
     setUser(null);
     clearSessionUser();
+    clearApiToken();
   };
 
   return <AuthContext.Provider value={{ user, login, registerUser, logout, isAuthenticated: !!user }}>{children}</AuthContext.Provider>;

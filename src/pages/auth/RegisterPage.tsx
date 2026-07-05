@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { ArrowRight, ChevronDown, Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowRight, Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthShell from '../../components/auth/AuthShell';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
@@ -12,7 +12,6 @@ interface RegisterForm {
   email: string;
   phone: string;
   password: string;
-  role: 'customer' | 'admin' | 'delivery' | 'chef';
 }
 
 function getWrapClass(hasError: boolean) {
@@ -54,16 +53,12 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { registerUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
   } = useForm<RegisterForm>({
-    defaultValues: {
-      role: 'customer',
-    },
   });
 
   const password = watch('password', '');
@@ -73,24 +68,23 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterForm) => {
     setLoading(true);
     setFormError('');
-    await new Promise((resolve) => setTimeout(resolve, 350));
-
-    if (data.role !== 'customer') {
-      setFormError("Les comptes equipe sont crees par l'administrateur depuis le dashboard.");
-      setLoading(false);
-      return;
-    }
 
     const fullName = `${data.firstName.trim()} ${data.lastName.trim()}`.replace(/\s+/g, ' ').trim();
-    const result = registerUser({ name: fullName, email: data.email, password: data.password });
+    const result = await registerUser({ name: fullName, email: data.email, password: data.password });
     if (!result.ok) {
       setFormError(result.error ?? 'Impossible de creer le compte.');
       setLoading(false);
       return;
     }
 
-    const redirect = new URLSearchParams(location.search).get('redirect');
-    navigate(redirect || '/mes-commandes', { replace: true });
+    navigate('/', {
+      replace: true,
+      state: {
+        signupSuccess: true,
+        pendingEmail: result.email || data.email,
+        devOtpCode: result.devOtpCode,
+      },
+    });
     setLoading(false);
   };
 
@@ -228,29 +222,6 @@ export default function RegisterPage() {
           </div>
           <p className="mt-1.5 text-xs text-[#8b8177]">{getPasswordFeedback(passwordScore)}</p>
           {errors.password ? <p className="mt-1.5 text-xs text-rose-500">{errors.password.message}</p> : null}
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium text-secondary-900">Role</label>
-          <div className={getWrapClass(!!errors.role)}>
-            <span className="auth-icon-badge">
-              <User size={16} />
-            </span>
-            <select
-              className="auth-input-inner appearance-none pr-8"
-              {...register('role', {
-                required: 'Le role est requis',
-              })}
-            >
-              <option value="customer">Client - Commander en ligne</option>
-              <option value="admin">Gerant - Acces au dashboard</option>
-              <option value="delivery">Livreur - Livraisons</option>
-              <option value="chef">Cuisinier - Cuisine</option>
-            </select>
-            <ChevronDown size={18} className="pointer-events-none text-[#8b8177]" />
-          </div>
-          <p className="mt-1.5 text-xs text-[#8b8177]">Les roles equipe sont prepares par un administrateur.</p>
-          {errors.role ? <p className="mt-1.5 text-xs text-rose-500">{errors.role.message}</p> : null}
         </div>
 
         <Button

@@ -19,7 +19,7 @@ function downloadBlob(filename: string, content: string, type: string) {
 }
 
 export default function DashboardReportsPage() {
-  const { orders, ingredients, staff } = useOutletContext<DashboardOutletContext>();
+  const { orders, ingredients, staff, topItems } = useOutletContext<DashboardOutletContext>();
 
   const totalRevenue = useMemo(() => orders.reduce((sum, order) => sum + order.totalAmount, 0), [orders]);
   const averageTicket = useMemo(() => (orders.length ? Math.round(totalRevenue / orders.length) : 0), [orders, totalRevenue]);
@@ -159,7 +159,7 @@ export default function DashboardReportsPage() {
         <OrdersStatusChart orders={orders} />
       </div>
 
-      <TopItemsChart orders={orders} />
+      <TopItemsChart orders={orders} items={topItems} />
     </div>
   );
 }

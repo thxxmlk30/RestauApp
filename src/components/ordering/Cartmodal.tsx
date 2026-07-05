@@ -1,24 +1,19 @@
 import { Bike, CheckCircle2, Minus, Plus, Store, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import DakarAddressPicker from './DakarAddressPicker';
-import type { MenuItem, Order, OrderItem, ServiceType } from '../../types';
+import type { DeliveryZone, MenuItem, Order, ServiceType } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { getZoneById } from '../../data/dakarZones';
-import { mockIngredients } from '../../data/ingredients';
 import { menuItems as defaultMenuItems } from '../../data/menuItems';
-import { mockOrders } from '../../data/orders';
-import { mockStaff } from '../../data/staff';
+import { restaurantApi } from '../../services/restaurantApi';
 import {
   buildDeliveryAddressLabel,
   calculateCartSubtotal,
   calculateOrderAmount,
-  deductIngredientsForOrder,
   formatCurrency,
-  getBestCourierForNextOrder,
 } from '../../utils/helpers';
-import { loadIngredients, loadMenuItems, loadOrders, loadStaff, saveIngredients, saveOrders } from '../../utils/storage';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
@@ -42,9 +37,24 @@ export default function CartModal() {
   const [formError, setFormError] = useState('');
   const [successOrderId, setSuccessOrderId] = useState('');
   const [assignedCourierName, setAssignedCourierName] = useState('');
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState('');
+  const [items, setItems] = useState<MenuItem[]>(defaultMenuItems);
+  const [zones, setZones] = useState<DeliveryZone[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
-  const items = useMemo(() => loadMenuItems(defaultMenuItems), []);
   const selectedZone = useMemo(() => getZoneById(zoneId), [zoneId]);
+
+  useEffect(() => {
+    restaurantApi
+      .menuItems()
+      .then(setItems)
+      .catch(() => setItems(defaultMenuItems));
+    restaurantApi
+      .deliveryZones()
+      .then(setZones)
+      .catch(() => setZones([]));
+  }, []);
 
   const cartLines = useMemo(() => {
     const byId = new Map(items.map((item) => [item.id, item]));
@@ -58,7 +68,9 @@ export default function CartModal() {
   }, [cart, items]);
 
   const subtotal = useMemo(() => calculateCartSubtotal(cartLines), [cartLines]);
-  const deliveryFee = serviceType === 'delivery' ? selectedZone?.fee ?? 0 : 0;
+  const apiSelectedZone = useMemo(() => zones.find((zone) => zone.id === zoneId), [zones, zoneId]);
+  const activeZone = apiSelectedZone ?? selectedZone;
+  const deliveryFee = serviceType === 'delivery' ? activeZone?.fee ?? 0 : 0;
   const grandTotal = useMemo(() => calculateOrderAmount(subtotal, deliveryFee), [subtotal, deliveryFee]);
 
   const resetState = () => {
@@ -74,6 +86,8 @@ export default function CartModal() {
     setFormError('');
     setSuccessOrderId('');
     setAssignedCourierName('');
+    setPaymentLoading(false);
+    setPaymentInfo('');
     setServiceType('dine_in');
   };
 
@@ -100,7 +114,7 @@ export default function CartModal() {
     }
 
     if (serviceType === 'delivery') {
-      if (!selectedZone) return 'Choisissez un secteur de livraison.';
+      if (!activeZone) return 'Choisissez un secteur de livraison.';
       if (!streetLine.trim()) return 'Ajoutez la rue ou l immeuble de livraison.';
       if (!phone.trim()) return 'Ajoutez un numero de telephone pour la livraison.';
     }
@@ -116,57 +130,56 @@ export default function CartModal() {
     }
     if (!user) return;
 
-    const staff = loadStaff(mockStaff);
-    const currentOrders = loadOrders(mockOrders);
-    const assignedChef = staff.find((member) => member.role === 'chef' && member.status === 'active');
-    const assignedCourier = serviceType === 'delivery' ? getBestCourierForNextOrder(staff, currentOrders) : undefined;
-
-    const orderId = `CMD-${Date.now().toString().slice(-6)}`;
-    const order: Order = {
-      id: orderId,
+    const payload = {
       serviceType,
       tableNumber: serviceType === 'dine_in' ? tableNumber : undefined,
-      deliveryAddress: serviceType === 'delivery' && selectedZone ? buildDeliveryAddressLabel(selectedZone, streetLine, landmark) : undefined,
-      deliveryZoneId: serviceType === 'delivery' ? selectedZone?.id : undefined,
-      deliveryDepartment: serviceType === 'delivery' ? selectedZone?.department : undefined,
-      deliveryCommune: serviceType === 'delivery' ? selectedZone?.commune : undefined,
-      deliverySector: serviceType === 'delivery' ? selectedZone?.sector : undefined,
-      deliveryFee: serviceType === 'delivery' ? deliveryFee : undefined,
+      deliveryZoneId: serviceType === 'delivery' ? activeZone?.id : undefined,
+      deliveryAddress: serviceType === 'delivery' && activeZone ? buildDeliveryAddressLabel(activeZone, streetLine, landmark) : undefined,
+      deliveryDepartment: serviceType === 'delivery' ? activeZone?.department : undefined,
+      deliveryCommune: serviceType === 'delivery' ? activeZone?.commune : undefined,
+      deliverySector: serviceType === 'delivery' ? activeZone?.sector : undefined,
       deliveryNotes: serviceType === 'delivery' ? deliveryNotes.trim() || undefined : undefined,
       customerPhone: phone.trim() || undefined,
       customerName: customerName.trim() || user.name,
-      userId: user.id,
-      userName: user.name,
-      userEmail: user.email,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      totalAmount: grandTotal,
-      subtotalAmount: subtotal,
-      assignedChefId: assignedChef?.id,
-      assignedChefName: assignedChef?.name,
-      courierId: assignedCourier?.id,
-      courierName: assignedCourier?.name,
-      estimatedReadyAt: new Date(Date.now() + 20 * 60000).toISOString(),
-      estimatedDeliveryAt:
-        serviceType === 'delivery' && selectedZone ? new Date(Date.now() + selectedZone.etaMinutes * 60000).toISOString() : undefined,
-      location: serviceType === 'delivery' && selectedZone ? { lat: selectedZone.lat, lng: selectedZone.lng } : undefined,
-      items: cartLines.map(
-        (line) =>
-          ({
-            menuItemId: line.item.id,
-            name: line.item.name,
-            quantity: line.quantity,
-            price: line.item.price,
-          }) satisfies OrderItem,
-      ),
+      items: cartLines.map((line) => ({
+        menuItemId: line.item.id,
+        quantity: line.quantity,
+      })),
     };
 
-    saveOrders([order, ...currentOrders]);
-    saveIngredients(deductIngredientsForOrder(loadIngredients(mockIngredients), order));
+    setSubmitting(true);
+    restaurantApi
+      .createOrder(payload)
+      .then((order: Order) => {
+        clearCart();
+        setAssignedCourierName(order.courierName || '');
+        setSuccessOrderId(order.id);
+        setPaymentInfo('');
+      })
+      .catch((submitError) => {
+        setFormError(submitError instanceof Error ? submitError.message : 'Impossible de creer la commande.');
+      })
+      .finally(() => setSubmitting(false));
+  };
 
-    clearCart();
-    setAssignedCourierName(assignedCourier?.name || '');
-    setSuccessOrderId(orderId);
+  const startStripePayment = () => {
+    if (!successOrderId) return;
+    setPaymentLoading(true);
+    setPaymentInfo('');
+
+    restaurantApi
+      .createStripeCheckout(successOrderId)
+      .then((response) => {
+        if (response.checkoutUrl) {
+          window.location.assign(response.checkoutUrl);
+          return;
+        }
+        setPaymentInfo('Paiement simulé prêt, mais aucune URL de redirection n’a été fournie.');
+      })
+      .catch((error) => {
+        setPaymentInfo(error instanceof Error ? error.message : 'Impossible de lancer le paiement Stripe.');
+      })
+      .finally(() => setPaymentLoading(false));
   };
 
   return (
@@ -182,6 +195,10 @@ export default function CartModal() {
               Reference {successOrderId}. {serviceType === 'delivery' ? assignedCourierName || 'Affectation livreur en cours.' : `Table ${tableNumber}.`}
             </p>
           </div>
+          <Button type="button" className="w-full" loading={paymentLoading} onClick={startStripePayment}>
+            Payer avec Stripe
+          </Button>
+          {paymentInfo ? <p className="text-sm text-gray-500">{paymentInfo}</p> : null}
           <div className="grid gap-3 sm:grid-cols-2">
             <Button
               type="button"
@@ -304,6 +321,7 @@ export default function CartModal() {
               ) : (
                 <div className="space-y-4">
                   <DakarAddressPicker
+                    zones={zones.length > 0 ? zones : [selectedZone].filter(Boolean) as DeliveryZone[]}
                     department={department}
                     commune={commune}
                     zoneId={zoneId}
@@ -363,7 +381,7 @@ export default function CartModal() {
 
             {serviceType === 'delivery' ? (
               <div className="border border-gray-100 bg-gray-50 p-3 text-sm text-gray-600">
-                {selectedZone ? `${selectedZone.sector} - ${selectedZone.commune}, ${selectedZone.department} - ${selectedZone.etaMinutes} min` : 'Choisissez un secteur.'}
+                {activeZone ? `${activeZone.sector} - ${activeZone.commune}, ${activeZone.department} - ${activeZone.etaMinutes} min` : 'Choisissez un secteur.'}
               </div>
             ) : (
               <div className="border border-gray-100 bg-gray-50 p-3 text-sm text-gray-600">Commande envoyee a la salle et a la cuisine.</div>
@@ -372,7 +390,7 @@ export default function CartModal() {
             {formError ? <div className="border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{formError}</div> : null}
 
             {isAuthenticated ? (
-              <Button type="button" className="w-full" onClick={submitOrder}>
+              <Button type="button" className="w-full" onClick={submitOrder} loading={submitting}>
                 Commander maintenant
               </Button>
             ) : (

@@ -41,7 +41,7 @@ function safeJsonParse(value: string) {
 const validMeals = new Set<Meal>(['breakfast', 'lunch', 'dinner', 'any']);
 const validCategories = new Set<MenuItem['category']>(['entree', 'plat', 'dessert', 'boisson']);
 const validUnits = new Set<IngredientUnit>(['kg', 'l', 'unit', 'g']);
-const validRoles = new Set<UserRole>(['admin', 'waiter', 'chef', 'delivery', 'customer']);
+const validRoles = new Set<UserRole>(['admin', 'waiter', 'chef', 'delivery', 'customer', 'client']);
 const validOrderStatuses = new Set<OrderStatus>(['pending', 'preparing', 'ready', 'delivered', 'cancelled']);
 const validServiceTypes = new Set<ServiceType>(['dine_in', 'delivery']);
 const validStaffStatuses = new Set<StaffStatus>(['active', 'break', 'off']);

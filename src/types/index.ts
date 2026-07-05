@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'waiter' | 'chef' | 'delivery' | 'customer';
+export type UserRole = 'admin' | 'waiter' | 'chef' | 'delivery' | 'customer' | 'client';
 
 export type StaffStatus = 'active' | 'break' | 'off';
 
@@ -9,6 +9,8 @@ export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered' | 'can
 export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'any';
 
 export type ServiceType = 'dine_in' | 'delivery';
+
+export type PaymentStatus = 'unpaid' | 'pending' | 'paid' | 'failed';
 
 export type StockBotChannel = 'email' | 'whatsapp';
 
@@ -91,6 +93,11 @@ export interface Order {
   userName?: string;
   userEmail?: string;
   promoCode?: string;
+  paymentStatus?: PaymentStatus;
+  paymentProvider?: string;
+  paymentSessionId?: string;
+  paymentIntentId?: string;
+  paidAt?: string;
   rating?: number;
   location?: OrderLocation;
   review?: string;
