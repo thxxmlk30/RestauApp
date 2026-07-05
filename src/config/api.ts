@@ -1,5 +1,7 @@
-const apiUrl = import.meta.env.VITE_API_URL?.trim() || 'http://localhost:3000/api';
-const useMocks = import.meta.env.VITE_USE_MOCKS !== 'false';
+const apiUrl =
+  import.meta.env.VITE_API_URL?.trim() ||
+  (import.meta.env.PROD ? 'https://linguere-backend.onrender.com/api' : 'http://localhost:3000/api');
+const useMocks = import.meta.env.VITE_USE_MOCKS === 'true';
 
 export const apiConfig = {
   baseUrl: apiUrl.replace(/\/$/, ''),
