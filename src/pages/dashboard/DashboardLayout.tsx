@@ -43,6 +43,7 @@ export default function DashboardLayout() {
     ingredientsLow?: number;
   }>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [actionError, setActionError] = useState('');
   const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
@@ -106,11 +107,18 @@ export default function DashboardLayout() {
     navigate('/');
   }, [logout, navigate]);
 
+  const reportActionError = useCallback((error: unknown, fallback = 'Action impossible.') => {
+    setActionError(error instanceof Error ? error.message : fallback);
+  }, []);
+
   const updateOrderStatus = useCallback((orderId: string, newStatus: OrderStatus) => {
     if (isAdmin) {
-      void restaurantApi.updateOrderStatus(orderId, newStatus).then((updatedOrder) => {
-        setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
-      });
+      void restaurantApi.updateOrderStatus(orderId, newStatus)
+        .then((updatedOrder) => {
+          setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
+          setActionError('');
+        })
+        .catch((error) => reportActionError(error));
       return;
     }
 
@@ -123,9 +131,12 @@ export default function DashboardLayout() {
 
   const deleteOrder = useCallback((orderId: string) => {
     if (isAdmin) {
-      void restaurantApi.deleteOrder(orderId).then(() => {
-        setOrders((prev) => prev.filter((order) => order.id !== orderId));
-      });
+      void restaurantApi.deleteOrder(orderId)
+        .then(() => {
+          setOrders((prev) => prev.filter((order) => order.id !== orderId));
+          setActionError('');
+        })
+        .catch((error) => reportActionError(error));
       return;
     }
 
@@ -141,9 +152,12 @@ export default function DashboardLayout() {
       const courier = staff.find((member) => member.id === staffId && member.role === 'delivery');
       if (!courier) return;
       if (isAdmin) {
-        void restaurantApi.assignOrderCourier(orderId, courier.id, courier.name).then((updatedOrder) => {
-          setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
-        });
+        void restaurantApi.assignOrderCourier(orderId, courier.id, courier.name)
+          .then((updatedOrder) => {
+            setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
+            setActionError('');
+          })
+          .catch((error) => reportActionError(error));
         return;
       }
       setOrders((prev) => {
@@ -162,9 +176,12 @@ export default function DashboardLayout() {
       const chef = staff.find((member) => member.id === staffId && member.role === 'chef');
       if (!chef) return;
       if (isAdmin) {
-        void restaurantApi.assignOrderChef(orderId, chef.id, chef.name).then((updatedOrder) => {
-          setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
-        });
+        void restaurantApi.assignOrderChef(orderId, chef.id, chef.name)
+          .then((updatedOrder) => {
+            setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
+            setActionError('');
+          })
+          .catch((error) => reportActionError(error));
         return;
       }
       setOrders((prev) => {
@@ -181,9 +198,12 @@ export default function DashboardLayout() {
   const upsertMenuItem = useCallback((item: MenuItem) => {
     if (isAdmin) {
       const request = item.id ? restaurantApi.updateMenuItem(item.id, item) : restaurantApi.createMenuItem(item);
-      void request.then((savedItem) => {
-        setMenuItems((prev) => (item.id ? prev.map((current) => (current.id === savedItem.id ? savedItem : current)) : [savedItem, ...prev]));
-      });
+      void request
+        .then((savedItem) => {
+          setMenuItems((prev) => (item.id ? prev.map((current) => (current.id === savedItem.id ? savedItem : current)) : [savedItem, ...prev]));
+          setActionError('');
+        })
+        .catch((error) => reportActionError(error));
       return;
     }
 
@@ -198,9 +218,12 @@ export default function DashboardLayout() {
 
   const deleteMenuItem = useCallback((itemId: string) => {
     if (isAdmin) {
-      void restaurantApi.deleteMenuItem(itemId).then(() => {
-        setMenuItems((prev) => prev.filter((item) => item.id !== itemId));
-      });
+      void restaurantApi.deleteMenuItem(itemId)
+        .then(() => {
+          setMenuItems((prev) => prev.filter((item) => item.id !== itemId));
+          setActionError('');
+        })
+        .catch((error) => reportActionError(error));
       return;
     }
 
@@ -215,9 +238,12 @@ export default function DashboardLayout() {
     if (isAdmin) {
       const current = menuItems.find((item) => item.id === itemId);
       if (!current) return;
-      void restaurantApi.updateMenuItem(itemId, { available: !current.available }).then((savedItem) => {
-        setMenuItems((prev) => prev.map((item) => (item.id === itemId ? savedItem : item)));
-      });
+      void restaurantApi.updateMenuItem(itemId, { available: !current.available })
+        .then((savedItem) => {
+          setMenuItems((prev) => prev.map((item) => (item.id === itemId ? savedItem : item)));
+          setActionError('');
+        })
+        .catch((error) => reportActionError(error));
       return;
     }
 
@@ -231,9 +257,12 @@ export default function DashboardLayout() {
   const upsertIngredient = useCallback((item: Ingredient) => {
     if (isAdmin) {
       const request = item.id ? restaurantApi.updateIngredient(item.id, item) : restaurantApi.createIngredient(item);
-      void request.then((savedItem) => {
-        setIngredients((prev) => (item.id ? prev.map((current) => (current.id === savedItem.id ? savedItem : current)) : [savedItem, ...prev]));
-      });
+      void request
+        .then((savedItem) => {
+          setIngredients((prev) => (item.id ? prev.map((current) => (current.id === savedItem.id ? savedItem : current)) : [savedItem, ...prev]));
+          setActionError('');
+        })
+        .catch((error) => reportActionError(error));
       return;
     }
 
@@ -253,9 +282,12 @@ export default function DashboardLayout() {
 
   const deleteIngredient = useCallback((itemId: string) => {
     if (isAdmin) {
-      void restaurantApi.deleteIngredient(itemId).then(() => {
-        setIngredients((prev) => prev.filter((item) => item.id !== itemId));
-      });
+      void restaurantApi.deleteIngredient(itemId)
+        .then(() => {
+          setIngredients((prev) => prev.filter((item) => item.id !== itemId));
+          setActionError('');
+        })
+        .catch((error) => reportActionError(error));
       return;
     }
 
@@ -274,9 +306,12 @@ export default function DashboardLayout() {
         ...current,
         currentStock: Math.max(0, Number((current.currentStock + delta).toFixed(1))),
         lastRestockedAt: delta > 0 ? new Date().toISOString() : current.lastRestockedAt,
-      }).then((savedItem) => {
-        setIngredients((prev) => prev.map((item) => (item.id === itemId ? savedItem : item)));
-      });
+      })
+        .then((savedItem) => {
+          setIngredients((prev) => prev.map((item) => (item.id === itemId ? savedItem : item)));
+          setActionError('');
+        })
+        .catch((error) => reportActionError(error));
       return;
     }
 
@@ -298,9 +333,12 @@ export default function DashboardLayout() {
   const upsertStaff = useCallback((member: Staff) => {
     if (isAdmin) {
       const request = member.id ? restaurantApi.updateStaff(member.id, member) : restaurantApi.createStaff(member);
-      void request.then((savedMember) => {
-        setStaff((prev) => (member.id ? prev.map((current) => (current.id === savedMember.id ? savedMember : current)) : [savedMember, ...prev]));
-      });
+      void request
+        .then((savedMember) => {
+          setStaff((prev) => (member.id ? prev.map((current) => (current.id === savedMember.id ? savedMember : current)) : [savedMember, ...prev]));
+          setActionError('');
+        })
+        .catch((error) => reportActionError(error));
       return;
     }
 
@@ -315,9 +353,12 @@ export default function DashboardLayout() {
 
   const deleteStaff = useCallback((staffId: string) => {
     if (isAdmin) {
-      void restaurantApi.deleteStaff(staffId).then(() => {
-        setStaff((prev) => prev.filter((member) => member.id !== staffId));
-      });
+      void restaurantApi.deleteStaff(staffId)
+        .then(() => {
+          setStaff((prev) => prev.filter((member) => member.id !== staffId));
+          setActionError('');
+        })
+        .catch((error) => reportActionError(error));
       return;
     }
 
@@ -465,6 +506,11 @@ export default function DashboardLayout() {
       ) : null}
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        {actionError ? (
+          <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {actionError}
+          </div>
+        ) : null}
         <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
           <Sidebar isOpen={isMobileSidebarOpen} onClose={() => setIsMobileSidebarOpen(false)} />
           <div className="min-w-0">

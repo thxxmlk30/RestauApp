@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { User, UserRole } from '../types';
 import { clearApiToken, getApiToken } from '../services/apiClient';
+import { ApiError } from '../services/apiClient';
 import { restaurantApi } from '../services/restaurantApi';
 
 type RegisterData = { name: string; email: string; password: string };
@@ -92,6 +93,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const sessionUser = loadSessionUser();
     const token = getApiToken();
 
+    const handleAuthExpired = () => {
+      clearSessionUser();
+      clearApiToken();
+      setUser(null);
+    };
+
+    window.addEventListener('restauapp:auth-expired', handleAuthExpired);
+
     if (token) {
       restaurantApi
         .me()
@@ -101,7 +110,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(normalized);
           saveSessionUser(normalized);
         })
-        .catch(() => {
+        .catch((error) => {
+          if (error instanceof ApiError && error.status === 401) {
+            handleAuthExpired();
+            return;
+          }
           clearApiToken();
           if (sessionUser) {
             setUser(sessionUser);
@@ -110,10 +123,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null);
           }
         });
-      return;
+
+      return () => {
+        window.removeEventListener('restauapp:auth-expired', handleAuthExpired);
+      };
     }
 
     if (sessionUser) setUser(sessionUser);
+    return () => {
+      window.removeEventListener('restauapp:auth-expired', handleAuthExpired);
+    };
   }, []);
 
   const login = async (email: string, password: string, rememberUser = true) => {

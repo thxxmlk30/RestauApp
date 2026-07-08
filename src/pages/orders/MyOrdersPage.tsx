@@ -27,6 +27,7 @@ export default function MyOrdersPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>(() => loadMenuItems(defaultMenuItems));
   const [ratingDrafts, setRatingDrafts] = useState<Record<string, number>>({});
   const [paymentLoadingId, setPaymentLoadingId] = useState('');
+  const [actionError, setActionError] = useState('');
   const favorites = useMemo(() => loadFavorites(), []);
   const favoriteItems = useMemo(
     () => menuItems.filter((item) => favorites.some((favorite) => favorite.menuItemId === item.id)),
@@ -50,17 +51,25 @@ export default function MyOrdersPage() {
   );
 
   const cancelOrder = (id: string) => {
-    void restaurantApi.cancelOrder(id).then((updatedOrder) => {
-      setOrders((prev) => prev.map((order) => (order.id === id ? updatedOrder : order)));
-    });
+    void restaurantApi
+      .cancelOrder(id)
+      .then((updatedOrder) => {
+        setOrders((prev) => prev.map((order) => (order.id === id ? updatedOrder : order)));
+        setActionError('');
+      })
+      .catch((error) => setActionError(error instanceof Error ? error.message : 'Impossible d’annuler la commande.'));
   };
 
   const rateOrder = (orderId: string) => {
     const rating = ratingDrafts[orderId];
     if (!rating) return;
-    void restaurantApi.rateOrder(orderId, rating).then((updatedOrder) => {
-      setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
-    });
+    void restaurantApi
+      .rateOrder(orderId, rating)
+      .then((updatedOrder) => {
+        setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)));
+        setActionError('');
+      })
+      .catch((error) => setActionError(error instanceof Error ? error.message : 'Impossible d’envoyer la note.'));
   };
 
   const reorder = (order: Order) => {
@@ -88,6 +97,7 @@ export default function MyOrdersPage() {
 
       <main className="px-4 pb-16 pt-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl space-y-8">
+          {actionError ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{actionError}</div> : null}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="font-display text-3xl font-bold text-secondary-900">Mes commandes</h1>

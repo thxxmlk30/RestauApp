@@ -2,11 +2,10 @@ import { Heart, MapPin, Minus, Plus, ShoppingCart, Sparkles, Truck } from 'lucid
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import type { Meal, MenuItem } from '../../types';
-import { menuItems as defaultMenuItems } from '../../data/menuItems';
 import { useCart } from '../../context/CartContext';
 import { restaurantApi } from '../../services/restaurantApi';
 import { formatCurrency, getSuggestedMeal } from '../../utils/helpers';
-import { loadFavorites, loadMenuItems, saveFavorites } from '../../utils/storage';
+import { loadFavorites, saveFavorites } from '../../utils/storage';
 import { Button } from '../ui/Button';
 
 import menuBannerImage from '../../assets/cover.webp';
@@ -20,12 +19,16 @@ const meals: { value: Meal; label: string; subtitle: string }[] = [
 
 export default function MenuSection() {
   const [activeMeal, setActiveMeal] = useState<Meal>(() => getSuggestedMeal());
-  const [items, setItems] = useState<MenuItem[]>(() => loadMenuItems(defaultMenuItems));
+  const [items, setItems] = useState<MenuItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(loadFavorites().map((item) => item.menuItemId)));
   const { cart, itemCount, increment, decrement, openCart } = useCart();
 
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
+    setLoadError('');
     void restaurantApi
       .menuItems()
       .then((response) => {
@@ -33,8 +36,14 @@ export default function MenuSection() {
           setItems(response);
         }
       })
-      .catch(() => {
-        if (!cancelled) setItems(loadMenuItems(defaultMenuItems));
+      .catch((error) => {
+        if (!cancelled) {
+          setItems([]);
+          setLoadError(error instanceof Error ? error.message : 'Impossible de charger le menu.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
       });
 
     return () => {
@@ -182,7 +191,19 @@ export default function MenuSection() {
         </motion.div>
 
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {visibleItems.map((item, index) => {
+          {isLoading ? (
+            <div className="col-span-full rounded-[28px] border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-500">
+              Chargement du menu...
+            </div>
+          ) : loadError ? (
+            <div className="col-span-full rounded-[28px] border border-amber-200 bg-amber-50 p-8 text-center text-sm text-amber-900">
+              <div>{loadError}</div>
+              <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => window.location.reload()}>
+                Réessayer
+              </Button>
+            </div>
+          ) : (
+            visibleItems.map((item, index) => {
             const quantity = cart[item.id] ?? 0;
             const isFavorite = favoriteIds.has(item.id);
 
@@ -257,7 +278,8 @@ export default function MenuSection() {
                 )}
               </motion.article>
             );
-          })}
+            })
+          )}
         </div>
       </div>
     </section>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { menuItems as defaultMenuItems } from '../../data/menuItems';
 import type { MenuItem } from '../../types';
 import { restaurantApi } from '../../services/restaurantApi';
+import { formatCurrency } from '../../utils/helpers';
 import { loadMenuItems } from '../../utils/storage';
 
 export default function MenuList() {
@@ -43,7 +44,7 @@ export default function MenuList() {
                 {catItems.map((item) => (
                   <li key={item.id} className="flex justify-between text-sm">
                     <span className="text-secondary-900">{item.name}</span>
-                    <span className="font-medium text-primary-500">{item.price} frs</span>
+                    <span className="font-medium text-primary-500">{formatCurrency(item.price)}</span>
                   </li>
                 ))}
               </ul>

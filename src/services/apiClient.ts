@@ -2,6 +2,16 @@ import { apiConfig } from '../config/api';
 
 const tokenKey = 'restauapp.apiToken.v1';
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 export function getApiToken() {
   return localStorage.getItem(tokenKey);
 }
@@ -33,13 +43,16 @@ export async function apiRequest<T>(path: string, options: ApiOptions = {}): Pro
   });
 
   if (!response.ok) {
-    if (response.status === 401) clearApiToken();
+    if (response.status === 401) {
+      clearApiToken();
+      window.dispatchEvent(new Event('restauapp:auth-expired'));
+    }
 
     const errorBody = await response.json().catch(() => null);
     const message =
       (Array.isArray(errorBody?.message) ? errorBody.message.join(', ') : errorBody?.message) ||
       `Erreur API ${response.status}`;
-    throw new Error(message);
+    throw new ApiError(response.status, message);
   }
 
   if (response.status === 204) return undefined as T;

@@ -22,7 +22,9 @@ function buildTopItems(orders: Order[], limit: number) {
 }
 
 export default function TopItemsChart({ orders, items }: { orders?: Order[]; items?: TopItemSummary[] }) {
-  const data = items?.length ? items.map((item) => ({ name: item.name, qty: item.totalQuantity })) : buildTopItems(orders ?? [], 6);
+  const data = items?.length
+    ? items.map((item) => ({ name: item.name, qty: Number(item.totalQuantity) || 0 }))
+    : buildTopItems(orders ?? [], 6);
 
   return (
     <div className="panel-3d rounded-[28px] border border-gray-100 bg-white p-5">

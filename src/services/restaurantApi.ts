@@ -46,6 +46,73 @@ export type StripeCheckoutResponse = {
   paymentStatus: string;
 };
 
+function asNumber(value: unknown, fallback = 0) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) return Number(value);
+  return fallback;
+}
+
+function normalizeMenuItem(item: MenuItem): MenuItem {
+  return {
+    ...item,
+    price: asNumber(item.price),
+  };
+}
+
+function normalizeIngredient(item: Ingredient): Ingredient {
+  return {
+    ...item,
+    currentStock: asNumber(item.currentStock),
+    minStock: asNumber(item.minStock),
+    reorderThreshold: asNumber(item.reorderThreshold),
+    criticalStock: asNumber(item.criticalStock),
+    costPerUnit: item.costPerUnit == null ? item.costPerUnit : asNumber(item.costPerUnit),
+  };
+}
+
+function normalizeStaff(member: Staff): Staff {
+  return {
+    ...member,
+    salary: asNumber(member.salary),
+  };
+}
+
+function normalizeZone(zone: DeliveryZone): DeliveryZone {
+  return {
+    ...zone,
+    fee: asNumber(zone.fee),
+    etaMinutes: asNumber(zone.etaMinutes),
+    lat: asNumber(zone.lat),
+    lng: asNumber(zone.lng),
+    mapX: asNumber(zone.mapX),
+    mapY: asNumber(zone.mapY),
+  };
+}
+
+function normalizeOrder(order: Order): Order {
+  return {
+    ...order,
+    totalAmount: asNumber(order.totalAmount),
+    subtotalAmount: order.subtotalAmount == null ? order.subtotalAmount : asNumber(order.subtotalAmount),
+    discountAmount: order.discountAmount == null ? order.discountAmount : asNumber(order.discountAmount),
+    deliveryFee: order.deliveryFee == null ? order.deliveryFee : asNumber(order.deliveryFee),
+    rating: order.rating == null ? order.rating : asNumber(order.rating),
+    items: order.items.map((item) => ({
+      ...item,
+      quantity: asNumber(item.quantity),
+      price: asNumber(item.price),
+    })),
+  };
+}
+
+function normalizeTopItem(item: TopItemSummary): TopItemSummary {
+  return {
+    ...item,
+    totalQuantity: asNumber(item.totalQuantity),
+    totalRevenue: asNumber(item.totalRevenue),
+  };
+}
+
 export const restaurantApi = {
   async login(email: string, password: string) {
     const response = await apiRequest<AuthResponse>(apiRoutes.authLogin, {
@@ -104,21 +171,21 @@ export const restaurantApi = {
   },
 
   menuItems() {
-    return apiRequest<MenuItem[]>(apiRoutes.menuItems, { auth: false });
+    return apiRequest<MenuItem[]>(apiRoutes.menuItems, { auth: false }).then((items) => items.map(normalizeMenuItem));
   },
 
   createMenuItem(payload: MenuItemInput) {
     return apiRequest<MenuItem>(apiRoutes.menuItems, {
       method: 'POST',
       body: JSON.stringify(payload),
-    });
+    }).then(normalizeMenuItem);
   },
 
   updateMenuItem(itemId: string, payload: Partial<MenuItemInput>) {
     return apiRequest<MenuItem>(`${apiRoutes.menuItems}/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
-    });
+    }).then(normalizeMenuItem);
   },
 
   deleteMenuItem(itemId: string) {
@@ -128,7 +195,7 @@ export const restaurantApi = {
   },
 
   deliveryZones() {
-    return apiRequest<DeliveryZone[]>(apiRoutes.deliveryZones, { auth: false });
+    return apiRequest<DeliveryZone[]>(apiRoutes.deliveryZones, { auth: false }).then((zones) => zones.map(normalizeZone));
   },
 
   createOrder(payload: CreateOrderPayload) {
@@ -139,32 +206,32 @@ export const restaurantApi = {
   },
 
   myOrders() {
-    return apiRequest<Order[]>(apiRoutes.myOrders);
+    return apiRequest<Order[]>(apiRoutes.myOrders).then((orders) => orders.map(normalizeOrder));
   },
 
   orders() {
-    return apiRequest<Order[]>(apiRoutes.orders);
+    return apiRequest<Order[]>(apiRoutes.orders).then((orders) => orders.map(normalizeOrder));
   },
 
   updateOrderStatus(orderId: string, status: OrderStatus) {
     return apiRequest<Order>(`${apiRoutes.orders}/${orderId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
-    });
+    }).then(normalizeOrder);
   },
 
   assignOrderChef(orderId: string, staffId?: string, staffName?: string) {
     return apiRequest<Order>(`${apiRoutes.orders}/${orderId}/assign-chef`, {
       method: 'PATCH',
       body: JSON.stringify({ staffId, staffName }),
-    });
+    }).then(normalizeOrder);
   },
 
   assignOrderCourier(orderId: string, staffId?: string, staffName?: string) {
     return apiRequest<Order>(`${apiRoutes.orders}/${orderId}/assign-courier`, {
       method: 'PATCH',
       body: JSON.stringify({ staffId, staffName }),
-    });
+    }).then(normalizeOrder);
   },
 
   deleteOrder(orderId: string) {
@@ -189,32 +256,32 @@ export const restaurantApi = {
   cancelOrder(orderId: string) {
     return apiRequest<Order>(`${apiRoutes.orders}/${orderId}/cancel`, {
       method: 'PATCH',
-    });
+    }).then(normalizeOrder);
   },
 
   rateOrder(orderId: string, rating: number, review?: string) {
     return apiRequest<Order>(`${apiRoutes.orders}/${orderId}/rate`, {
       method: 'PATCH',
       body: JSON.stringify({ rating, review }),
-    });
+    }).then(normalizeOrder);
   },
 
   ingredients() {
-    return apiRequest<Ingredient[]>(apiRoutes.ingredients);
+    return apiRequest<Ingredient[]>(apiRoutes.ingredients).then((items) => items.map(normalizeIngredient));
   },
 
   createIngredient(payload: IngredientInput) {
     return apiRequest<Ingredient>(apiRoutes.ingredients, {
       method: 'POST',
       body: JSON.stringify(payload),
-    });
+    }).then(normalizeIngredient);
   },
 
   updateIngredient(itemId: string, payload: Partial<IngredientInput>) {
     return apiRequest<Ingredient>(`${apiRoutes.ingredients}/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
-    });
+    }).then(normalizeIngredient);
   },
 
   deleteIngredient(itemId: string) {
@@ -224,21 +291,21 @@ export const restaurantApi = {
   },
 
   staff() {
-    return apiRequest<Staff[]>(apiRoutes.staff);
+    return apiRequest<Staff[]>(apiRoutes.staff).then((items) => items.map(normalizeStaff));
   },
 
   createStaff(payload: StaffInput) {
     return apiRequest<Staff>(apiRoutes.staff, {
       method: 'POST',
       body: JSON.stringify(payload),
-    });
+    }).then(normalizeStaff);
   },
 
   updateStaff(staffId: string, payload: Partial<StaffInput>) {
     return apiRequest<Staff>(`${apiRoutes.staff}/${staffId}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
-    });
+    }).then(normalizeStaff);
   },
 
   deleteStaff(staffId: string) {
@@ -252,6 +319,6 @@ export const restaurantApi = {
   },
 
   topItems(limit = 6) {
-    return apiRequest<TopItemSummary[]>(`${apiRoutes.reportsTopItems}?limit=${limit}`);
+    return apiRequest<TopItemSummary[]>(`${apiRoutes.reportsTopItems}?limit=${limit}`).then((items) => items.map(normalizeTopItem));
   },
 };
