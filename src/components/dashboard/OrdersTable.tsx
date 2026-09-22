@@ -1,11 +1,12 @@
 import { Trash2 } from 'lucide-react';
-import type { Order, OrderStatus, Staff } from '../../types';
-import { formatCurrency, formatDeliveryArea, formatServiceType, formatTimeAgo } from '../../utils/helpers';
+import type { Order, OrderStatus, Staff, User } from '../../types';
+import { canDeleteOrder, getAvailableTransitions } from '../../utils/orderPermissions';
+import { formatCurrency, formatDeliveryArea, formatServiceType, formatStatus, formatTimeAgo } from '../../utils/helpers';
 import { Badge } from '../ui/Badge';
 
 interface OrdersTableProps {
   orders: Order[];
-  statusOptions: { value: OrderStatus; label: string }[];
+  user: User | null;
   onUpdateStatus: (orderId: string, newStatus: OrderStatus) => void;
   onDeleteOrder?: (orderId: string) => void;
   chefs?: Staff[];
@@ -43,9 +44,31 @@ function AssignmentSelect({
   );
 }
 
+function StatusSelect({ order, user, onUpdateStatus }: { order: Order; user: User | null; onUpdateStatus: (orderId: string, newStatus: OrderStatus) => void }) {
+  const options = getAvailableTransitions(order, user);
+  if (options.length === 0) return null;
+
+  return (
+    <select
+      className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs"
+      value=""
+      onChange={(event) => {
+        if (event.target.value) onUpdateStatus(order.id, event.target.value as OrderStatus);
+      }}
+    >
+      <option value="">Changer le statut</option>
+      {options.map((status) => (
+        <option key={status} value={status}>
+          {formatStatus(status)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export default function OrdersTable({
   orders,
-  statusOptions,
+  user,
   onUpdateStatus,
   onDeleteOrder,
   chefs = [],
@@ -77,6 +100,7 @@ export default function OrdersTable({
                 order.serviceType === 'delivery'
                   ? order.deliveryAddress || order.customerName || 'Livraison'
                   : `Table ${order.tableNumber ?? '-'}`;
+              const canDelete = onDeleteOrder && canDeleteOrder(order, user);
 
               return (
                 <tr key={order.id} className="transition hover:bg-gray-50">
@@ -136,25 +160,13 @@ export default function OrdersTable({
                   <td className="px-5 py-4 align-top text-right text-sm font-bold text-secondary-900">{formatCurrency(order.totalAmount)}</td>
                   <td className="px-5 py-4 align-top">
                     <div className="flex items-center gap-2">
-                      {order.status !== 'delivered' && order.status !== 'cancelled' ? (
-                        <select
-                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs"
-                          value={order.status}
-                          onChange={(event) => onUpdateStatus(order.id, event.target.value as OrderStatus)}
-                        >
-                          {statusOptions.map((statusOption) => (
-                            <option key={statusOption.value} value={statusOption.value}>
-                              {statusOption.label}
-                            </option>
-                          ))}
-                        </select>
-                      ) : null}
-                      {onDeleteOrder ? (
+                      <StatusSelect order={order} user={user} onUpdateStatus={onUpdateStatus} />
+                      {canDelete ? (
                         <button
                           type="button"
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                           onClick={() => {
-                            if (window.confirm(`Supprimer la commande ${order.id} ?`)) onDeleteOrder(order.id);
+                            if (window.confirm(`Supprimer la commande ${order.id} ?`)) onDeleteOrder?.(order.id);
                           }}
                           aria-label="Supprimer"
                           title="Supprimer"
@@ -174,6 +186,7 @@ export default function OrdersTable({
       <div className="space-y-3 p-4 xl:hidden">
         {orders.map((order) => {
           const productsFull = order.items.map((item) => `${item.quantity}x ${item.name}`).join(', ');
+          const canDelete = onDeleteOrder && canDeleteOrder(order, user);
 
           return (
             <article key={order.id} className="rounded-[24px] border border-gray-100 bg-white p-4 shadow-sm">
@@ -228,25 +241,13 @@ export default function OrdersTable({
               </div>
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                {order.status !== 'delivered' && order.status !== 'cancelled' ? (
-                  <select
-                    className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm"
-                    value={order.status}
-                    onChange={(event) => onUpdateStatus(order.id, event.target.value as OrderStatus)}
-                  >
-                    {statusOptions.map((statusOption) => (
-                      <option key={statusOption.value} value={statusOption.value}>
-                        {statusOption.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : null}
-                {onDeleteOrder ? (
+                <StatusSelect order={order} user={user} onUpdateStatus={onUpdateStatus} />
+                {canDelete ? (
                   <button
                     type="button"
                     className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                     onClick={() => {
-                      if (window.confirm(`Supprimer la commande ${order.id} ?`)) onDeleteOrder(order.id);
+                      if (window.confirm(`Supprimer la commande ${order.id} ?`)) onDeleteOrder?.(order.id);
                     }}
                     aria-label="Supprimer"
                     title="Supprimer"

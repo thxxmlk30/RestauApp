@@ -1,9 +1,9 @@
-import { Pencil, Plus, Trash2, Users } from 'lucide-react';
+import { Copy, KeyRound, Pencil, Plus, Trash2, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import type { Staff, StaffStatus, UserRole } from '../../types';
-import type { DashboardOutletContext } from '../../pages/dashboard/dashboardOutletContext';
 import { formatCurrency, formatRole } from '../../utils/helpers';
+import { useCreateStaff, useDeleteStaff, useProvisionStaffAccount, useStaff, useUpdateStaff } from '../../hooks/useStaff';
+import type { ProvisionAccountResponse } from '../../services/restaurantApi';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -41,11 +41,17 @@ const statusLabels: Record<StaffStatus, string> = {
 };
 
 export default function StaffManagement() {
-  const { staff, upsertStaff, deleteStaff, updateStaffStatus } = useOutletContext<DashboardOutletContext>();
+  const { data: staff = [] } = useStaff();
+  const createStaff = useCreateStaff();
+  const updateStaff = useUpdateStaff();
+  const deleteStaff = useDeleteStaff();
+  const provisionAccount = useProvisionStaffAccount();
+
   const [activeRole, setActiveRole] = useState<UserRole | 'all'>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [formError, setFormError] = useState('');
   const [form, setForm] = useState<StaffFormState>(emptyForm);
+  const [credentials, setCredentials] = useState<(ProvisionAccountResponse & { staffName: string }) | null>(null);
 
   const filtered = useMemo(() => {
     return [...staff]
@@ -99,8 +105,7 @@ export default function StaffManagement() {
     if (!form.hireDate) return setFormError("Date d'embauche requise.");
     if (!form.shift.trim()) return setFormError('Créneau requis.');
 
-    upsertStaff({
-      id: form.id ?? `staff-${Date.now()}`,
+    const payload = {
       name: form.name.trim(),
       email: form.email.trim().toLowerCase(),
       role: form.role,
@@ -110,8 +115,24 @@ export default function StaffManagement() {
       shift: form.shift.trim(),
       zone: form.zone.trim() || undefined,
       status: form.status,
-    });
+    };
+
+    if (form.id) {
+      updateStaff.mutate({ id: form.id, payload });
+    } else {
+      createStaff.mutate(payload);
+    }
     closeModal();
+  };
+
+  const handleProvision = (member: Staff) => {
+    if (!window.confirm(`Creer un acces de connexion pour ${member.name} (${formatRole(member.role)}) ?`)) return;
+    provisionAccount.mutate(
+      { staffId: member.id },
+      {
+        onSuccess: (response) => setCredentials({ ...response, staffName: member.name }),
+      },
+    );
   };
 
   return (
@@ -177,6 +198,11 @@ export default function StaffManagement() {
                     <Badge variant={member.status === 'active' ? 'outline' : member.status === 'break' ? 'secondary' : 'destructive'}>
                       {statusLabels[member.status]}
                     </Badge>
+                    {member.userId ? (
+                      <Badge variant="outline">Acces actif</Badge>
+                    ) : (
+                      <Badge variant="destructive">Sans acces</Badge>
+                    )}
                   </div>
                   <div className="mt-2 text-sm text-gray-500">
                     {member.email} · {member.phone}
@@ -195,7 +221,7 @@ export default function StaffManagement() {
                 <select
                   className="rounded-xl border border-gray-200 px-3 py-2 text-xs"
                   value={member.status}
-                  onChange={(event) => updateStaffStatus(member.id, event.target.value as StaffStatus)}
+                  onChange={(event) => updateStaff.mutate({ id: member.id, payload: { status: event.target.value as StaffStatus } })}
                 >
                   {Object.entries(statusLabels).map(([value, label]) => (
                     <option key={value} value={value}>
@@ -203,6 +229,16 @@ export default function StaffManagement() {
                     </option>
                   ))}
                 </select>
+                {!member.userId ? (
+                  <button
+                    type="button"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600"
+                    onClick={() => handleProvision(member)}
+                    title="Creer un acces de connexion"
+                  >
+                    <KeyRound size={16} />
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-secondary-900"
@@ -214,7 +250,7 @@ export default function StaffManagement() {
                   type="button"
                   className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
                   onClick={() => {
-                    if (window.confirm(`Supprimer ${member.name} ?`)) deleteStaff(member.id);
+                    if (window.confirm(`Supprimer ${member.name} ?`)) deleteStaff.mutate(member.id);
                   }}
                 >
                   <Trash2 size={16} />
@@ -222,6 +258,8 @@ export default function StaffManagement() {
               </div>
             </div>
           ))}
+
+          {filtered.length === 0 && <div className="py-12 text-center text-gray-400">Aucun collaborateur trouve.</div>}
         </div>
       </div>
 
@@ -277,6 +315,39 @@ export default function StaffManagement() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      <Modal open={!!credentials} title="Acces cree" onClose={() => setCredentials(null)}>
+        {credentials ? (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Un email avec les identifiants de connexion a ete envoye a <strong>{credentials.staffName}</strong>.
+            </p>
+            <div className="space-y-2 rounded-2xl border border-gray-100 bg-gray-50 p-4 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-gray-500">Email</span>
+                <span className="font-mono font-semibold text-secondary-900">{credentials.email}</span>
+              </div>
+              {credentials.devPassword ? (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-gray-500">Mot de passe (dev)</span>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 font-mono font-semibold text-secondary-900"
+                    onClick={() => credentials.devPassword && navigator.clipboard?.writeText(credentials.devPassword)}
+                    title="Copier"
+                  >
+                    {credentials.devPassword}
+                    <Copy size={12} />
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            <Button type="button" className="w-full" onClick={() => setCredentials(null)}>
+              Fermer
+            </Button>
+          </div>
+        ) : null}
       </Modal>
     </div>
   );

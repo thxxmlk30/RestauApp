@@ -1,14 +1,11 @@
 import StaffManagement from '../../components/dashboard/StaffManagement';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 export default function DashboardStaffPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-secondary-900">Gestion du personnel</h1>
-        <p className="text-sm text-gray-500 mt-1">CRUD employés, salaires, planning.</p>
-      </div>
+      <PageHeader eyebrow="Equipe" title="Gestion du personnel" description="CRUD employes, salaires, planning et acces au dashboard." />
       <StaffManagement />
     </div>
   );
 }
-

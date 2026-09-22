@@ -19,6 +19,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  // Renseigne uniquement si ce compte est lie a une fiche Staff (RH) via
+  // un provisionnement admin. null pour un client ou un admin non lie.
+  staffId?: string | null;
 }
 
 export interface Staff extends User {
@@ -28,6 +31,9 @@ export interface Staff extends User {
   shift: string;
   zone?: string;
   status: StaffStatus;
+  // Renseigne des que l'admin a "provisionne" un compte de connexion pour
+  // cette fiche RH via POST /staff/:id/provision-account. null sinon.
+  userId?: string | null;
 }
 
 export interface Ingredient {
@@ -120,6 +126,9 @@ export interface MenuItem {
   image: string;
   available: boolean;
   prepTimeMinutes?: number;
+  // Composition en ingredients (optionnelle). Renvoyee par le backend
+  // seulement sur create/update (pas sur la liste/detail publics).
+  recipe?: MenuItemRecipeLine[];
 }
 
 export interface DashboardStats {
@@ -132,6 +141,46 @@ export interface DashboardStats {
   deliveryOrders: number;
   dineInOrders: number;
   activeCouriers: number;
+}
+
+/** Forme exacte renvoyee par GET /reports/dashboard (backend). */
+export interface DashboardReport {
+  todayOrders: number;
+  todayRevenue: number;
+  deliveryOrders: number;
+  dineInOrders: number;
+  pendingOrders: number;
+  ingredientsLow: number;
+  cancelledOrdersToday: number;
+  averageRating: number | null;
+}
+
+export interface RevenueTrendPoint {
+  date: string;
+  orders: number;
+  revenue: number;
+}
+
+export interface CancellationStats {
+  totalOrders: number;
+  cancelledOrders: number;
+  cancellationRate: number;
+}
+
+export interface ProfitabilityItem {
+  menuItemId: string;
+  name: string;
+  quantitySold: number;
+  revenue: number;
+  cost: number;
+  margin: number;
+  marginPercent: number;
+}
+
+export interface MenuItemRecipeLine {
+  ingredientId: string;
+  quantityRequired: number;
+  ingredient?: Ingredient;
 }
 
 export interface PromoCode {

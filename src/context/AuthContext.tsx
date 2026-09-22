@@ -42,9 +42,10 @@ function normalizeUser(value: unknown): User | null {
   const name = asString(user.name);
   const email = asString(user.email);
   const role = asString(user.role);
+  const staffId = 'staffId' in user ? asString(user.staffId) : undefined;
 
   if (!id || !name || !email || !role || !validRoles.has(role as UserRole)) return null;
-  return { id, name, email, role: role as UserRole };
+  return { id, name, email, role: role as UserRole, staffId };
 }
 
 function clearSessionUser() {
@@ -170,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     clearSessionUser();
-    clearApiToken();
+    void restaurantApi.logout();
   };
 
   return <AuthContext.Provider value={{ user, login, registerUser, logout, isAuthenticated: !!user }}>{children}</AuthContext.Provider>;

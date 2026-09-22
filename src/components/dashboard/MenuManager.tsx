@@ -1,9 +1,11 @@
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import type { Meal, MenuItem } from '../../types';
+import type { Meal, MenuItem, MenuItemRecipeLine } from '../../types';
 import { formatCurrency } from '../../utils/helpers';
-import type { DashboardOutletContext } from '../../pages/dashboard/dashboardOutletContext';
+import { menuImageOptions } from '../../utils/menuImages';
+import { usePermissions } from '../../hooks/usePermissions';
+import { useIngredients } from '../../hooks/useIngredients';
+import { useCreateMenuItem, useDeleteMenuItem, useMenuItems, useUpdateMenuItem } from '../../hooks/useMenuItems';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
@@ -31,6 +33,8 @@ type MenuItemFormState = {
   meal: Meal;
   available: boolean;
   prepTimeMinutes: string;
+  image: string;
+  recipe: MenuItemRecipeLine[];
 };
 
 const emptyForm: MenuItemFormState = {
@@ -41,10 +45,18 @@ const emptyForm: MenuItemFormState = {
   meal: 'lunch',
   available: true,
   prepTimeMinutes: '20',
+  image: '',
+  recipe: [],
 };
 
-export default function MenuCrud() {
-  const { menuItems, upsertMenuItem, deleteMenuItem, toggleMenuItemAvailability } = useOutletContext<DashboardOutletContext>();
+export default function MenuManager() {
+  const { canManageMenu } = usePermissions();
+  const { data: menuItems = [] } = useMenuItems();
+  const { data: ingredients = [] } = useIngredients({ enabled: canManageMenu });
+  const createMenuItem = useCreateMenuItem();
+  const updateMenuItem = useUpdateMenuItem();
+  const deleteMenuItem = useDeleteMenuItem();
+
   const [activeMeal, setActiveMeal] = useState<Meal | 'all'>('all');
   const [activeCategory, setActiveCategory] = useState<MenuItem['category'] | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -76,6 +88,8 @@ export default function MenuCrud() {
       meal: item.meal,
       available: item.available,
       prepTimeMinutes: String(item.prepTimeMinutes ?? 20),
+      image: item.image ?? '',
+      recipe: item.recipe ?? [],
     });
     setFormError('');
     setModalOpen(true);
@@ -85,6 +99,27 @@ export default function MenuCrud() {
     setModalOpen(false);
     setFormError('');
     setForm(emptyForm);
+  };
+
+  const toggleAvailability = (item: MenuItem) => {
+    updateMenuItem.mutate({ id: item.id, payload: { available: !item.available } });
+  };
+
+  const addRecipeLine = () => {
+    const unused = ingredients.find((ingredient) => !form.recipe.some((line) => line.ingredientId === ingredient.id));
+    if (!unused) return;
+    setForm((prev) => ({ ...prev, recipe: [...prev.recipe, { ingredientId: unused.id, quantityRequired: 1 }] }));
+  };
+
+  const updateRecipeLine = (index: number, patch: Partial<MenuItemRecipeLine>) => {
+    setForm((prev) => ({
+      ...prev,
+      recipe: prev.recipe.map((line, lineIndex) => (lineIndex === index ? { ...line, ...patch } : line)),
+    }));
+  };
+
+  const removeRecipeLine = (index: number) => {
+    setForm((prev) => ({ ...prev, recipe: prev.recipe.filter((_, lineIndex) => lineIndex !== index) }));
   };
 
   const submitForm = () => {
@@ -97,18 +132,27 @@ export default function MenuCrud() {
     if (!description) return setFormError('La description est requise.');
     if (!Number.isFinite(price) || price <= 0) return setFormError('Le prix doit être positif.');
     if (!Number.isFinite(prepTimeMinutes) || prepTimeMinutes <= 0) return setFormError('Le temps de préparation doit être positif.');
+    if (form.recipe.some((line) => !line.ingredientId || !Number.isFinite(line.quantityRequired) || line.quantityRequired <= 0)) {
+      return setFormError('Chaque ligne de recette doit avoir un ingredient et une quantite positive.');
+    }
 
-    upsertMenuItem({
-      id: form.id ?? `menu-${Date.now()}`,
+    const payload = {
       name,
       description,
       price: Math.round(price),
       category: form.category,
       meal: form.meal,
-      image: '',
+      image: form.image,
       available: form.available,
       prepTimeMinutes: Math.round(prepTimeMinutes),
-    });
+      recipe: form.recipe,
+    };
+
+    if (form.id) {
+      updateMenuItem.mutate({ id: form.id, payload });
+    } else {
+      createMenuItem.mutate(payload);
+    }
     closeModal();
   };
 
@@ -118,17 +162,19 @@ export default function MenuCrud() {
         <div className="flex flex-col gap-4 border-b border-gray-100 p-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-lg font-bold text-secondary-900">Catalogue produits</h2>
-            <p className="text-sm text-gray-500">CRUD complet, recherche, disponibilité et temps de préparation.</p>
+            <p className="text-sm text-gray-500">Recherche, disponibilité, composition et temps de préparation.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative min-w-[220px]">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rechercher un produit..." className="pl-9" />
             </div>
-            <Button type="button" onClick={openCreate}>
-              <Plus size={16} className="mr-2" />
-              Ajouter un produit
-            </Button>
+            {canManageMenu ? (
+              <Button type="button" onClick={openCreate}>
+                <Plus size={16} className="mr-2" />
+                Ajouter un produit
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -166,6 +212,9 @@ export default function MenuCrud() {
         <div className="divide-y divide-gray-50">
           {filtered.map((item) => (
             <div key={item.id} className={`flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center ${!item.available ? 'opacity-60' : ''}`}>
+              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-gray-100">
+                {item.image ? <img src={item.image} alt={item.name} className="h-full w-full object-cover" /> : null}
+              </div>
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-secondary-900">{item.name}</span>
@@ -179,35 +228,39 @@ export default function MenuCrud() {
                 <p className="mt-2 max-w-2xl text-sm text-gray-500">{item.description}</p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="text-right">
-                  <div className="text-sm font-bold text-secondary-900">{formatCurrency(item.price)}</div>
-                  <div className="text-xs text-gray-500">{item.id}</div>
+              {canManageMenu ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-secondary-900">{formatCurrency(item.price)}</div>
+                    <div className="text-xs text-gray-500">{item.id}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleAvailability(item)}
+                    className={`relative inline-flex h-6 w-11 rounded-full transition ${item.available ? 'bg-emerald-500' : 'bg-gray-200'}`}
+                  >
+                    <span className={`mt-0.5 h-5 w-5 rounded-full bg-white shadow transition ${item.available ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-secondary-900"
+                    onClick={() => openEdit(item)}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                    onClick={() => {
+                      if (window.confirm(`Supprimer "${item.name}" ?`)) deleteMenuItem.mutate(item.id);
+                    }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => toggleMenuItemAvailability(item.id)}
-                  className={`relative inline-flex h-6 w-11 rounded-full transition ${item.available ? 'bg-emerald-500' : 'bg-gray-200'}`}
-                >
-                  <span className={`mt-0.5 h-5 w-5 rounded-full bg-white shadow transition ${item.available ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-secondary-900"
-                  onClick={() => openEdit(item)}
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-                  onClick={() => {
-                    if (window.confirm(`Supprimer "${item.name}" ?`)) deleteMenuItem(item.id);
-                  }}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
+              ) : (
+                <div className="text-right text-sm font-bold text-secondary-900">{formatCurrency(item.price)}</div>
+              )}
             </div>
           ))}
 
@@ -215,8 +268,8 @@ export default function MenuCrud() {
         </div>
       </div>
 
-      <Modal open={modalOpen} title={form.id ? 'Modifier un produit' : 'Ajouter un produit'} onClose={closeModal}>
-        <div className="space-y-4">
+      <Modal open={modalOpen} title={form.id ? 'Modifier un produit' : 'Ajouter un produit'} onClose={closeModal} maxWidthClassName="max-w-2xl">
+        <div className="max-h-[70vh] space-y-5 overflow-y-auto pr-1">
           <Input label="Nom" value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} />
           <Input
             label="Description"
@@ -267,6 +320,82 @@ export default function MenuCrud() {
               </select>
             </div>
           </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">Photo</label>
+              {form.image ? (
+                <button type="button" className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-rose-600" onClick={() => setForm((prev) => ({ ...prev, image: '' }))}>
+                  <X size={12} /> retirer
+                </button>
+              ) : null}
+            </div>
+            {form.image ? (
+              <div className="mb-3 h-32 w-32 overflow-hidden rounded-2xl border border-gray-200">
+                <img src={form.image} alt="Apercu" className="h-full w-full object-cover" />
+              </div>
+            ) : null}
+            <div className="grid max-h-40 grid-cols-5 gap-2 overflow-y-auto rounded-2xl border border-gray-100 p-2 sm:grid-cols-7">
+              {menuImageOptions.map((option) => (
+                <button
+                  key={option.url}
+                  type="button"
+                  title={option.label}
+                  onClick={() => setForm((prev) => ({ ...prev, image: option.url }))}
+                  className={`aspect-square overflow-hidden rounded-xl border-2 transition ${
+                    form.image === option.url ? 'border-primary-500' : 'border-transparent hover:border-gray-200'
+                  }`}
+                >
+                  <img src={option.url} alt={option.label} className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">Composition (ingredients)</label>
+              <Button type="button" variant="outline" size="sm" onClick={addRecipeLine} disabled={ingredients.length === 0}>
+                <Plus size={14} className="mr-1" /> Ajouter
+              </Button>
+            </div>
+            {form.recipe.length === 0 ? (
+              <p className="text-xs text-gray-400">Aucune composition renseignee (optionnel).</p>
+            ) : (
+              <div className="space-y-2">
+                {form.recipe.map((line, index) => (
+                  <div key={`${line.ingredientId}-${index}`} className="flex items-center gap-2">
+                    <select
+                      className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                      value={line.ingredientId}
+                      onChange={(event) => updateRecipeLine(index, { ingredientId: event.target.value })}
+                    >
+                      {ingredients.map((ingredient) => (
+                        <option key={ingredient.id} value={ingredient.id}>
+                          {ingredient.name} ({ingredient.unit})
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="w-24 rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                      value={line.quantityRequired}
+                      onChange={(event) => updateRecipeLine(index, { quantityRequired: Number(event.target.value) })}
+                    />
+                    <button
+                      type="button"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                      onClick={() => removeRecipeLine(index)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <label className="inline-flex items-center gap-2 text-sm text-gray-700">
             <input
               type="checkbox"

@@ -1,6 +1,17 @@
-import type { DeliveryZone, Ingredient, MenuItem, Order, OrderStatus, Staff } from '../types';
+import type {
+  CancellationStats,
+  DashboardReport,
+  DeliveryZone,
+  Ingredient,
+  MenuItem,
+  Order,
+  OrderStatus,
+  ProfitabilityItem,
+  RevenueTrendPoint,
+  Staff,
+} from '../types';
 import { apiRoutes } from '../config/api';
-import { apiRequest, setApiToken } from './apiClient';
+import { apiRequest, apiRequestWithCount, clearApiToken, setApiToken } from './apiClient';
 
 type AuthResponse = {
   accessToken: string;
@@ -9,7 +20,14 @@ type AuthResponse = {
     name: string;
     email: string;
     role: string;
+    staffId?: string | null;
   };
+};
+
+export type ProvisionAccountResponse = {
+  message: string;
+  email: string;
+  devPassword?: string;
 };
 
 type AuthMutationResponse = {
@@ -170,6 +188,14 @@ export const restaurantApi = {
     return apiRequest<AuthResponse['user']>(apiRoutes.authMe);
   },
 
+  async logout() {
+    try {
+      await apiRequest<{ message: string }>(apiRoutes.authLogout, { method: 'POST' });
+    } finally {
+      clearApiToken();
+    }
+  },
+
   menuItems() {
     return apiRequest<MenuItem[]>(apiRoutes.menuItems, { auth: false }).then((items) => items.map(normalizeMenuItem));
   },
@@ -211,6 +237,11 @@ export const restaurantApi = {
 
   orders() {
     return apiRequest<Order[]>(apiRoutes.orders).then((orders) => orders.map(normalizeOrder));
+  },
+
+  async ordersPaginated(page: number, limit: number) {
+    const { data, total } = await apiRequestWithCount<Order[]>(`${apiRoutes.orders}?page=${page}&limit=${limit}`);
+    return { data: data.map(normalizeOrder), total };
   },
 
   updateOrderStatus(orderId: string, status: OrderStatus) {
@@ -290,8 +321,19 @@ export const restaurantApi = {
     });
   },
 
+  lowStockIngredients() {
+    return apiRequest<Ingredient[]>(apiRoutes.ingredientsLowStock).then((items) => items.map(normalizeIngredient));
+  },
+
   staff() {
     return apiRequest<Staff[]>(apiRoutes.staff).then((items) => items.map(normalizeStaff));
+  },
+
+  provisionStaffAccount(staffId: string, password?: string) {
+    return apiRequest<ProvisionAccountResponse>(apiRoutes.staffProvisionAccount(staffId), {
+      method: 'POST',
+      body: JSON.stringify(password ? { password } : {}),
+    });
   },
 
   createStaff(payload: StaffInput) {
@@ -315,10 +357,22 @@ export const restaurantApi = {
   },
 
   dashboardReport() {
-    return apiRequest(apiRoutes.reportsDashboard);
+    return apiRequest<DashboardReport>(apiRoutes.reportsDashboard);
   },
 
   topItems(limit = 6) {
     return apiRequest<TopItemSummary[]>(`${apiRoutes.reportsTopItems}?limit=${limit}`).then((items) => items.map(normalizeTopItem));
+  },
+
+  revenueTrend(days = 7) {
+    return apiRequest<RevenueTrendPoint[]>(`${apiRoutes.reportsRevenueTrend}?days=${days}`);
+  },
+
+  cancellationStats(days = 30) {
+    return apiRequest<CancellationStats>(`${apiRoutes.reportsCancellations}?days=${days}`);
+  },
+
+  profitability(limit = 10) {
+    return apiRequest<ProfitabilityItem[]>(`${apiRoutes.reportsProfitability}?limit=${limit}`);
   },
 };

@@ -38,6 +38,16 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 }
 
 const staffRoles: UserRole[] = ['admin', 'waiter', 'chef', 'delivery'];
+const adminOnly: UserRole[] = ['admin'];
+const kitchenAndAdmin: UserRole[] = ['admin', 'chef', 'waiter', 'delivery'];
+
+function DashboardChildRoute({ allowedRoles, children }: { allowedRoles: UserRole[]; children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (user && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <>{children}</>;
+}
 
 export default function App() {
   return (
@@ -61,13 +71,55 @@ export default function App() {
           }
         >
           <Route index element={<DashboardOverviewPage />} />
-          <Route path="stats" element={<DashboardStatsPage />} />
+          <Route
+            path="stats"
+            element={
+              <DashboardChildRoute allowedRoles={adminOnly}>
+                <DashboardStatsPage />
+              </DashboardChildRoute>
+            }
+          />
           <Route path="orders" element={<DashboardOrdersPage />} />
-          <Route path="menu" element={<DashboardMenuPage />} />
-          <Route path="stock" element={<DashboardStockPage />} />
-          <Route path="staff" element={<DashboardStaffPage />} />
-          <Route path="reports" element={<DashboardReportsPage />} />
-          <Route path="zones" element={<DashboardDispatchPage />} />
+          <Route
+            path="menu"
+            element={
+              <DashboardChildRoute allowedRoles={kitchenAndAdmin}>
+                <DashboardMenuPage />
+              </DashboardChildRoute>
+            }
+          />
+          <Route
+            path="stock"
+            element={
+              <DashboardChildRoute allowedRoles={kitchenAndAdmin}>
+                <DashboardStockPage />
+              </DashboardChildRoute>
+            }
+          />
+          <Route
+            path="staff"
+            element={
+              <DashboardChildRoute allowedRoles={adminOnly}>
+                <DashboardStaffPage />
+              </DashboardChildRoute>
+            }
+          />
+          <Route
+            path="reports"
+            element={
+              <DashboardChildRoute allowedRoles={adminOnly}>
+                <DashboardReportsPage />
+              </DashboardChildRoute>
+            }
+          />
+          <Route
+            path="zones"
+            element={
+              <DashboardChildRoute allowedRoles={['admin', 'delivery']}>
+                <DashboardDispatchPage />
+              </DashboardChildRoute>
+            }
+          />
         </Route>
 
         <Route

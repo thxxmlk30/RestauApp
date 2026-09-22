@@ -1,46 +1,75 @@
+import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import OrdersTable from '../../components/dashboard/OrdersTable';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { useAuth } from '../../context/AuthContext';
+import { usePermissions } from '../../hooks/usePermissions';
+import { useAssignChef, useAssignCourier, useDeleteOrder, useOrdersPaginated, useUpdateOrderStatus } from '../../hooks/useOrders';
+import { useStaff } from '../../hooks/useStaff';
+import { ALLOWED_STATUS_TRANSITIONS } from '../../utils/orderPermissions';
 import type { OrderStatus, ServiceType } from '../../types';
-import type { DashboardOutletContext } from './dashboardOutletContext';
+import { formatStatus } from '../../utils/helpers';
+
+const statusFilters: OrderStatus[] = Object.keys(ALLOWED_STATUS_TRANSITIONS) as OrderStatus[];
+const PAGE_SIZE = 20;
 
 export default function DashboardOrdersPage() {
   const { user } = useAuth();
-  const { orders, staff, statusOptions, updateOrderStatus, deleteOrder, assignChef, assignCourier } =
-    useOutletContext<DashboardOutletContext>();
+  const { isAdmin } = usePermissions();
+  const [page, setPage] = useState(1);
   const [activeFilter, setActiveFilter] = useState<OrderStatus | 'all'>('all');
   const [serviceFilter, setServiceFilter] = useState<ServiceType | 'all'>('all');
+  const [search, setSearch] = useState('');
+
+  const { data } = useOrdersPaginated(page, PAGE_SIZE);
+  const { data: staff } = useStaff({ enabled: isAdmin });
+  const updateStatus = useUpdateOrderStatus();
+  const deleteOrder = useDeleteOrder();
+  const assignChef = useAssignChef();
+  const assignCourier = useAssignCourier();
+
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const filteredOrders = useMemo(() => {
-    let base = [...orders];
+    const term = search.trim().toLowerCase();
+    return (data?.items ?? []).filter((order) => {
+      if (activeFilter !== 'all' && order.status !== activeFilter) return false;
+      if (serviceFilter !== 'all' && order.serviceType !== serviceFilter) return false;
+      if (!term) return true;
+      return (
+        order.id.toLowerCase().includes(term) ||
+        (order.customerName ?? '').toLowerCase().includes(term) ||
+        (order.userName ?? '').toLowerCase().includes(term) ||
+        order.items.some((line) => line.name.toLowerCase().includes(term))
+      );
+    });
+  }, [activeFilter, data, search, serviceFilter]);
 
-    if (user?.role === 'chef') {
-      base = base.filter((order) => order.status === 'pending' || order.status === 'preparing' || order.status === 'ready');
-    } else if (user?.role === 'waiter') {
-      base = base.filter((order) => order.serviceType === 'dine_in');
-    } else if (user?.role === 'delivery') {
-      base = base.filter((order) => order.serviceType === 'delivery');
-    }
-
-    if (activeFilter !== 'all') base = base.filter((order) => order.status === activeFilter);
-    if (serviceFilter !== 'all') base = base.filter((order) => order.serviceType === serviceFilter);
-
-    return base.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [activeFilter, orders, serviceFilter, user?.role]);
-
-  const chefs = staff.filter((member) => member.role === 'chef');
-  const couriers = staff.filter((member) => member.role === 'delivery');
+  const chefs = (staff ?? []).filter((member) => member.role === 'chef');
+  const couriers = (staff ?? []).filter((member) => member.role === 'delivery');
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-secondary-900">Gestion des commandes</h1>
-        <p className="mt-1 text-sm text-gray-500">Filtre par statut, par type de service et affectation de l’équipe.</p>
-      </div>
+      <PageHeader
+        eyebrow="Operations"
+        title="Gestion des commandes"
+        description="Filtre par statut, par type de service, recherche et affectation de l'equipe."
+      />
 
       <div className="panel-3d overflow-hidden rounded-[30px] border border-gray-100 bg-white">
         <div className="space-y-4 border-b border-gray-100 p-5">
+          <div className="relative max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Rechercher (ID, client, produit)..."
+              className="pl-9"
+            />
+          </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -49,16 +78,16 @@ export default function DashboardOrdersPage() {
             >
               Tous statuts
             </button>
-            {statusOptions.map((statusOption) => (
+            {statusFilters.map((status) => (
               <button
-                key={statusOption.value}
+                key={status}
                 type="button"
-                onClick={() => setActiveFilter(statusOption.value)}
+                onClick={() => setActiveFilter(status)}
                 className={`rounded-full px-3 py-1 text-xs ${
-                  activeFilter === statusOption.value ? 'bg-secondary-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  activeFilter === status ? 'bg-secondary-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {statusOption.label}
+                {formatStatus(status)}
               </button>
             ))}
           </div>
@@ -80,14 +109,48 @@ export default function DashboardOrdersPage() {
 
         <OrdersTable
           orders={filteredOrders}
-          statusOptions={statusOptions}
-          onUpdateStatus={updateOrderStatus}
-          onDeleteOrder={user?.role === 'admin' ? deleteOrder : undefined}
+          user={user}
+          onUpdateStatus={(orderId, status) => updateStatus.mutate({ orderId, status })}
+          onDeleteOrder={isAdmin ? (orderId) => deleteOrder.mutate(orderId) : undefined}
           chefs={chefs}
           couriers={couriers}
-          onAssignChef={user?.role === 'admin' || user?.role === 'chef' ? assignChef : undefined}
-          onAssignCourier={user?.role === 'admin' || user?.role === 'delivery' ? assignCourier : undefined}
+          onAssignChef={
+            isAdmin
+              ? (orderId, staffId) => {
+                  const chef = chefs.find((member) => member.id === staffId);
+                  assignChef.mutate({ orderId, staffId, staffName: chef?.name });
+                }
+              : undefined
+          }
+          onAssignCourier={
+            isAdmin
+              ? (orderId, staffId) => {
+                  const courier = couriers.find((member) => member.id === staffId);
+                  assignCourier.mutate({ orderId, staffId, staffName: courier?.name });
+                }
+              : undefined
+          }
         />
+
+        <div className="flex items-center justify-between gap-4 border-t border-gray-100 px-5 py-4">
+          <span className="text-xs text-gray-500">
+            Page {page} / {totalPages} · {total} commande(s) au total
+          </span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="rounded-xl" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
+              Precedent
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl"
+              disabled={page >= totalPages}
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            >
+              Suivant
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
